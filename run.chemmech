@@ -80,7 +80,7 @@ foreach Mechanism ( $mechanisms )
 
 
 #set Opath = ${BASE}/${Mechanism}_test
- set Opath = ${Mpath}"-sol"
+ set Opath = ${Mpath}"-sol_gfort"
 #set Opath = /home/hwo/tools/mech_processor/${Mechanism}
 #set Opath = ${BASE}/test
  set KPP_Out_Path = ${Opath}

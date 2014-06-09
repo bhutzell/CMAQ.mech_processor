@@ -16,7 +16,7 @@
 ifndef COMPILER
   COMPILER = INTEL
 # COMPILER = PGF90
-#COMPILER = GFORT
+ COMPILER = GFORT
 endif
 
 ifeq ($(COMPILER),INTEL)
@@ -44,6 +44,7 @@ else
 
  ifeq ($(COMPILER),GFORT)
    FC    = /usr/local/gcc-4.6/bin/gfortran
+   FC = /usr/local/apps/gcc-4.7.3/bin/gfortran
    CC    = /usr/bin/gcc
 #  FC    = gfortran
 #  CC    = gcc
@@ -53,7 +54,7 @@ else
    F90_FLAGS     = $(f90_FLAGS)
    C_FLAGS       = -O2 -DFLDMN -I /home/wdx/lib/x86_64/gcc/mpich/include
    LINKER        = $(FC)
-   LINK_FLAGS    = -static
+   LINK_FLAGS    = # -static
  endif
 
 endif
