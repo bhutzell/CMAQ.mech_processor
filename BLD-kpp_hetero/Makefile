@@ -1,7 +1,7 @@
 # original file copied from /home/yoj/src/mech/BLD_2, 1/31/2008
 # need to source scom command for compilers
 
-  MODEL = CHEMMECH_ggb_SS4-sol
+  MODEL = CHEMMECH_ggb_SS4
 
 
 #  FC = $(myFC) 
@@ -43,18 +43,17 @@ else
  LINK_FLAGS = -Bstatic  -Bstatic_pgi
 
  ifeq ($(COMPILER),GFORT)
-   FC    = /usr/local/gcc-4.6/bin/gfortran
-   FC = /usr/local/apps/gcc-4.7.3/bin/gfortran
    CC    = /usr/bin/gcc
-#  FC    = gfortran
+   FC    = gfortran
 #  CC    = gcc
    f_FLAGS       = -ffixed-form -ffixed-line-length-132 -O3 -funroll-loops -finit-character=32 -fcheck=all -I. 
+   f_FLAGS       = -ffixed-form -ffixed-line-length-132 -O3 -funroll-loops -finit-character=32 -I. 
    F_FLAGS       = $(f_FLAGS)
    f90_FLAGS     = -cpp -ffree-form -ffree-line-length-none -O3 -funroll-loops -finit-character=32 -fcheck=all -I. 
+   f90_FLAGS     = -cpp -ffree-form -ffree-line-length-none -O3 -funroll-loops -finit-character=32 -I. 
    F90_FLAGS     = $(f90_FLAGS)
    C_FLAGS       = -O2 -DFLDMN -I /home/wdx/lib/x86_64/gcc/mpich/include
    LINKER        = $(FC)
-   LINK_FLAGS    = # -static
  endif
 
 endif
