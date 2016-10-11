@@ -30,7 +30,7 @@ C what(1) key, module and SID; SCCS file; date and time of last delta:
 C @(#)CHEMMECH.F 1.1 /project/mod3/MECH/src/driver/mech/SCCS/s.CHEMMECH.F 02 Jan 1997 15:26:41
 
 C:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-      SUBROUTINE WRT_RATE_CONSTANT( NR, IP, LABEL, NS, SPCLIS  )
+      SUBROUTINE WRT_RATE_CONSTANT( NR, IP, NS, SPCLIS, LABEL  )
 
 
       USE MECHANISM_DATA
@@ -40,10 +40,9 @@ C:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
       INTEGER,         INTENT( IN ) :: NR ! number of reactions
       INTEGER,         INTENT( IN ) :: IP ! number of photolysis reaction
-      CHARACTER( 16 ), INTENT( IN ) :: LABEL( MAXRXNUM,2 ) ! LABEL(NXX,1) 1st label found in rx NXX
-                                                            ! LABEL(NXX,2) 2nd label found in rx NXX
       INTEGER,         INTENT( IN ) :: NS ! number of species
-      CHARACTER( 16 ), INTENT( IN ) :: SPCLIS( MAXSPEC )
+      CHARACTER( 16 ), INTENT( IN ) :: SPCLIS( : )
+      CHARACTER( 16 ), INTENT( IN ) :: LABEL( :,: ) ! LABEL(NXX,1) 1st label found in rx NXX
 
 c..local Variables for steady-state species
 
@@ -187,6 +186,7 @@ c..Variables for species to be dropped from mechanism
       INTEGER SPECIAL_TERMS         ! Total # of terms in special rate
       INTEGER COUNT_TERMS           ! Active count of terms in a special rate
       INTEGER TEMPLATE_UNIT         ! IO unit # for mapping subroutine
+      INTEGER IDIFF_ORDER           ! difference between order of two separate reactions
             
       CHARACTER(  32 ) :: MAPPING_ROUTINE = 'MAPPING_ROUTINE'
       CHARACTER( 256 ) :: EQNAME
@@ -194,14 +194,12 @@ c..Variables for species to be dropped from mechanism
 
 
       LOGICAL LITE               ! option to omitted specific write statements
+      LOGICAL FALLOFF_RATE       ! whether a reaction is a falloff type
   
       INTERFACE 
        SUBROUTINE GETRCTNT ( IMECH, INBUF, IEOL, LPOINT, CHR, WORD,
      &                      NXX, NS, SPCLIS, SPC1RX,
      &                      ICOL, LABEL, N_DROP_SPC, DROP_SPC )
-         USE KPP_DATA
-         USE MECHANISM_DATA
-         IMPLICIT NONE
          INTEGER,         INTENT(   IN  ) :: IMECH
          CHARACTER( 81 ), INTENT( INOUT ) :: INBUF
          INTEGER,         INTENT( INOUT ) :: LPOINT
@@ -210,18 +208,16 @@ c..Variables for species to be dropped from mechanism
          CHARACTER( 16 ), INTENT( INOUT ) :: WORD
          INTEGER,         INTENT(   IN  ) :: NXX
          INTEGER,         INTENT( INOUT ) :: NS
-         CHARACTER( 16 ), INTENT( INOUT ) :: SPCLIS( MAXSPEC )
-         INTEGER,         INTENT( INOUT ) :: SPC1RX( MAXSPEC )
+         CHARACTER( 16 ), INTENT( INOUT ) :: SPCLIS( : )
+         INTEGER,         INTENT( INOUT ) :: SPC1RX( : )
          INTEGER,         INTENT( INOUT ) :: ICOL
-         CHARACTER( 16 ), INTENT(   IN  ) :: LABEL( MAXRXNUM, 2 )
+         CHARACTER( 16 ), INTENT(   IN  ) :: LABEL( :, : )
          INTEGER,         INTENT(   IN  ) :: N_DROP_SPC
-         CHARACTER( 16 ), INTENT(   IN  ) :: DROP_SPC( MAXNLIST )
+         CHARACTER( 16 ), INTENT(   IN  ) :: DROP_SPC( : )
         END SUBROUTINE GETRCTNT
         SUBROUTINE GETPRDCT ( IMECH, INBUF, LPOINT, IEOL, CHR, WORD,
      &                      NXX, NS, SPCLIS, SPC1RX,
      &                      ICOL, N_DROP_SPC, DROP_SPC )
-          USE MECHANISM_DATA
-          IMPLICIT NONE
           INTEGER,         INTENT(   IN  ) :: IMECH
           CHARACTER( 81 ), INTENT( INOUT ) :: INBUF
           INTEGER,         INTENT( INOUT ) :: LPOINT
@@ -230,16 +226,14 @@ c..Variables for species to be dropped from mechanism
           CHARACTER( 16 ), INTENT( INOUT ) :: WORD
           INTEGER,         INTENT(   IN  ) :: NXX
           INTEGER,         INTENT( INOUT ) :: NS
-          CHARACTER( 16 ), INTENT( INOUT ) :: SPCLIS( MAXSPEC )
-          INTEGER,         INTENT( INOUT ) :: SPC1RX( MAXSPEC )
+          CHARACTER( 16 ), INTENT( INOUT ) :: SPCLIS( : )
+          INTEGER,         INTENT( INOUT ) :: SPC1RX( : )
           INTEGER,         INTENT( INOUT ) :: ICOL
           INTEGER,         INTENT(   IN  ) :: N_DROP_SPC
-          CHARACTER( 16 ), INTENT(   IN  ) :: DROP_SPC( MAXNLIST )
+          CHARACTER( 16 ), INTENT(   IN  ) :: DROP_SPC( : )
          END SUBROUTINE GETPRDCT
          SUBROUTINE GETRATE ( IMECH, INBUF, LPOINT, IEOL, CHR,
      &                         NXX, LABEL, IP )
-           USE MECHANISM_DATA
-           IMPLICIT NONE
            CHARACTER(  1 ), INTENT( INOUT ) :: CHR
            CHARACTER( 81 ), INTENT( INOUT ) :: INBUF
            INTEGER,         INTENT( IN )    :: IMECH
@@ -247,44 +241,36 @@ c..Variables for species to be dropped from mechanism
            INTEGER,         INTENT( INOUT ) :: IEOL
            INTEGER,         INTENT( INOUT ) :: IP
            INTEGER,         INTENT( IN )    :: NXX
-           CHARACTER( 16 ), INTENT( INOUT ) :: LABEL( MAXRXNUM,2 )
+           CHARACTER( 16 ), INTENT( INOUT ) :: LABEL( :,: )
         END SUBROUTINE GETRATE
         SUBROUTINE WREXTS_FORTRAN90 (WRUNIT, EQNAME_MECH, DESCRP_MECH, NS, 
      &                      SPCLIS, SPC1RX, NR, IP,  NAMCONSTS, CVAL, SS1RX, LITE  ) 
-          USE MECHANISM_DATA
-          IMPLICIT NONE
           INTEGER,          INTENT( IN )  ::  WRUNIT     ! logical write unit no.
           CHARACTER( 120 ), INTENT ( IN ) :: EQNAME_MECH
           CHARACTER(  32 ), INTENT ( IN ) :: DESCRP_MECH
           INTEGER,          INTENT ( IN ) :: NS                ! no. of species found in mechanism table
-          CHARACTER(  16 ), INTENT ( IN ) :: SPCLIS( MAXSPEC ) ! species list from mechanism table
+          CHARACTER(  16 ), INTENT ( IN ) :: SPCLIS( : ) ! species list from mechanism table
           INTEGER,          INTENT ( IN ) :: NR
-          INTEGER,          INTENT ( IN ) :: SPC1RX( MAXSPEC ) ! rx index of 1st occurence of species in mechanism table
+          INTEGER,          INTENT ( IN ) :: SPC1RX( : ) ! rx index of 1st occurence of species in mechanism table
           INTEGER,          INTENT ( IN ) :: IP
-          CHARACTER( 16 ),  INTENT ( IN ) :: NAMCONSTS( MAXCONSTS )
-          REAL( 8 ),        INTENT ( IN ) :: CVAL( MAXCONSTS )
-          INTEGER,          INTENT ( IN ) :: SS1RX( MAXNLIST )
+          CHARACTER( 16 ),  INTENT ( IN ) :: NAMCONSTS( : )
+          REAL( 8 ),        INTENT ( IN ) :: CVAL( : )
+          INTEGER,          INTENT ( IN ) :: SS1RX( : )
           LOGICAL,          INTENT ( IN ) :: LITE               ! option to omit specific write statements
         END SUBROUTINE WREXTS_FORTRAN90
         SUBROUTINE GET_SS_DATA ( LUNOUT, NR ) 
-          USE MECHANISM_DATA
-          IMPLICIT NONE
           INTEGER, INTENT ( IN )         :: LUNOUT   ! Output unit number
           INTEGER, INTENT ( IN )         :: NR       ! No. of reactions
         END SUBROUTINE GET_SS_DATA
         SUBROUTINE CHECK_SS_SPC ( LUNOUT, NS, SPCLIS, NR, LABEL, SS1RX )
-         USE MECHANISM_DATA
-         IMPLICIT NONE
          INTEGER, INTENT ( IN )         :: LUNOUT               ! Output unit number
          INTEGER, INTENT ( IN )         ::  NS                  ! No. of species in mechanism
-         CHARACTER( 16 ), INTENT ( IN ) ::  SPCLIS( MAXSPEC )   ! List of mechanism species
+         CHARACTER( 16 ), INTENT ( IN ) ::  SPCLIS( : )   ! List of mechanism species
          INTEGER, INTENT ( IN )         ::  NR                  ! No. of reactions
-         CHARACTER( 16 ), INTENT ( IN ) ::  LABEL( MAXRXNUM,2 ) ! Reaction labels
-         INTEGER, INTENT ( INOUT )      ::  SS1RX( MAXNLIST )
+         CHARACTER( 16 ), INTENT ( IN ) ::  LABEL( :,: ) ! Reaction labels
+         INTEGER, INTENT ( INOUT )      ::  SS1RX( : )
        END SUBROUTINE CHECK_SS_SPC
        SUBROUTINE WRSS_EXT_FORTRAN90( WRUNIT, NR ) 
-         USE MECHANISM_DATA
-         IMPLICIT NONE
          INTEGER, INTENT( IN )    ::  WRUNIT     ! logical write unit no.
          INTEGER, INTENT ( IN )   :: NR   ! No. of reactions
        END SUBROUTINE WRSS_EXT_FORTRAN90
@@ -396,40 +382,69 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 ! count total number of terms in special rates
          SPECIAL_TERMS = 0
          DO IREACT = 1, MAXSPECTERMS
-            IF( INDEX_KTERM( NXX, IREACT ) .GT. 0 )THEN
+            IF( KC_COEFFS( NXX, IREACT ) .EQ. 0.0 )CYCLE
+            IF( INDEX_KTERM( NXX, IREACT ) .GT. -1 )THEN
                 SPECIAL_TERMS = SPECIAL_TERMS + 1
             END IF
+         END DO         
+         DO IREACT = 1, MAXSPECTERMS
             IF( OPERATORS( NXX, IREACT ) .GT. 0 )THEN
                 SPECIAL_TERMS = SPECIAL_TERMS + 1
             END IF
          END DO         
          WRITE(MODULE_UNIT,'(11X, A16)', ADVANCE = 'NO' )SPECIAL( NXX )
+         WRITE(MODULE_UNIT,'(A3)', ADVANCE = 'NO' )' = '
          FIRST_TERM = .TRUE.
 ! first write standard rate constants time concentrations
          COUNT_TERMS = 0
          DO IREACT = 1, MAXSPECTERMS
              IRX  = INDEX_KTERM( NXX, IREACT )
-             IF( IRX .LT. 1 )CYCLE
+             IF( IRX .LT. 0 .OR. KC_COEFFS( NXX, IREACT ) .EQ. 0.0 )CYCLE
+!              WRITE(6,'(11X, A16, 1X, ES12.4)' )SPECIAL( NXX ),KC_COEFFS( NXX, IREACT )
              COUNT_TERMS = COUNT_TERMS + 1 
              IF( FIRST_TERM )THEN
-                PHRASE = ' = '
-                FIRST_TERM = .FALSE.
-                IF(KC_COEFFS( NXX, IREACT ) .LT. 0.0 )PHRASE = ' = ' // ' - '
+                PHRASE = ' '
+                IF(KC_COEFFS( NXX, IREACT ) .LT. 0.0 )PHRASE = ' - '
+!                FIRST_TERM = .FALSE.
              ELSE
                 WRITE(MODULE_UNIT, 4711, ADVANCE = 'NO' )
-                PHRASE = ' + '
-                IF(KC_COEFFS( NXX, IREACT ) .LT. 0.0 )PHRASE = ' - '
+                PHRASE = ' +  '
+                IF(KC_COEFFS( NXX, IREACT ) .LT. 0.0 )PHRASE = '  -  '
              END IF
              IF( KC_COEFFS( NXX, IREACT ) .NE. 1.0 )THEN
-                 WRITE(MODULE_UNIT, 4708, ADVANCE = 'NO')TRIM(PHRASE),
-     &          REAL( ABS( KC_COEFFS( NXX, IREACT ) ), 8), IRX
+                IF( IRX .GT. 0 )THEN
+                    WRITE(MODULE_UNIT, 4708, ADVANCE = 'NO')TRIM(PHRASE),
+     &              REAL( ABS( KC_COEFFS( NXX, IREACT ) ), 8), IRX
+                ELSE
+                    WRITE(MODULE_UNIT, 4718, ADVANCE = 'NO')TRIM(PHRASE),
+     &              REAL( ABS( KC_COEFFS( NXX, IREACT ) ), 8)
+                END IF
              ELSE
-                 WRITE(MODULE_UNIT, 4706, ADVANCE = 'NO')TRIM(PHRASE),IRX
+                IF( IRX .GT. 0 )THEN
+                  IF( FIRST_TERM )THEN
+                      FIRST_TERM = .FALSE.
+                      WRITE(MODULE_UNIT, 4706, ADVANCE = 'NO')TRIM(PHRASE),IRX
+                 ELSE
+                      WRITE(MODULE_UNIT, 4706, ADVANCE = 'NO')TRIM(PHRASE) // ' ',IRX
+                 END IF
+                ELSE
+                  IF( FIRST_TERM )THEN
+                      FIRST_TERM = .FALSE.
+                      WRITE(MODULE_UNIT, 4726, ADVANCE = 'NO')TRIM(PHRASE)
+                 ELSE
+                      WRITE(MODULE_UNIT, 4726, ADVANCE = 'NO')TRIM(PHRASE) // ' '
+                 END IF
+                END IF
              END IF
              ISPC = INDEX_CTERM( NXX, IREACT )
              IF( ISPC .LT. 1 )CYCLE
 !             WRITE(PHRASE,'(A,I4,A)')' * Y( NCELL, ', IOLD2NEW(ISPC,NCS) , ' ) '
-             WRITE(PHRASE,'(A,I4,A)')' * Y( NCELL, IOLD2NEW( ', ISPC, ', NCS) ) '
+!             IF( IRX .GT. 0 .AND. KC_COEFFS( NXX, IREACT ) .NE. 1.0 )THEN
+             IF( IRX .GT. 0 )THEN
+                WRITE(PHRASE,'(A,I4,A)')'* Y( NCELL, IOLD2NEW( ', ISPC, ', NCS) ) '
+             ELSE
+                WRITE(PHRASE,'(A,I4,A)')'Y( NCELL, IOLD2NEW( ', ISPC, ', NCS) ) '
+             END IF
              WRITE(MODULE_UNIT, 4709, ADVANCE = 'NO')TRIM( PHRASE )
              IF( IREACT .LT. MAXSPECTERMS )THEN
                  IF( COUNT_TERMS .LT. SPECIAL_TERMS )THEN
@@ -441,21 +456,27 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
          DO IREACT = 1, MAXSPECTERMS
             IDX = OPERATORS( NXX, IREACT )
             IF( IDX .LT. 1 )CYCLE
+!              WRITE(6,'(11X, A16, 1X, ES12.4)' )SPECIAL( NXX ),OPERATOR_COEFFS( NXX, IREACT )
              COUNT_TERMS = COUNT_TERMS + 1 
              IF( FIRST_TERM )THEN
-                PHRASE = ' = '
-                IF(OPERATOR_COEFFS( NXX, IREACT ) .LT. 0.0 )PHRASE = ' = ' // ' - '
-                FIRST_TERM = .FALSE.
+                PHRASE = ''
+                IF(OPERATOR_COEFFS( NXX, IREACT ) .LT. 0.0 )PHRASE = '-'
+!                FIRST_TERM = .FALSE.
              ELSE
                 WRITE(MODULE_UNIT, 4711, ADVANCE = 'NO' )
-                PHRASE = ' + '
-                IF(OPERATOR_COEFFS( NXX, IREACT ) .LT. 0.0 )PHRASE = ' - '
+                PHRASE = ' +  '
+                IF(OPERATOR_COEFFS( NXX, IREACT ) .LT. 0.0 )PHRASE = ' -  '
              END IF
              IF( OPERATOR_COEFFS( NXX, IREACT ) .NE. 1.0 )THEN
                  WRITE(MODULE_UNIT, 4710, ADVANCE = 'NO')TRIM(PHRASE),
      &           REAL( ABS( OPERATOR_COEFFS( NXX, IREACT ) ), 8), TRIM( SPECIAL( IDX ) )
              ELSE
-                 WRITE(MODULE_UNIT, 4712, ADVANCE = 'NO')TRIM(PHRASE),TRIM( SPECIAL( IDX ) )
+                IF( FIRST_TERM )THEN
+                   FIRST_TERM = .FALSE.
+                   WRITE(MODULE_UNIT, 4712, ADVANCE = 'NO')TRIM(PHRASE),TRIM( SPECIAL( IDX ) )
+                ELSE
+                   WRITE(MODULE_UNIT, 4712, ADVANCE = 'NO')TRIM(PHRASE) // ' ',TRIM( SPECIAL( IDX ) )
+                END IF
              END IF
              IF( IREACT .LT. MAXSPECTERMS )THEN
                  IF( COUNT_TERMS .LT. SPECIAL_TERMS )THEN
@@ -463,22 +484,33 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
                  END IF
              END IF
          END DO 
-         WRITE(MODULE_UNIT, * )' '
+         WRITE(MODULE_UNIT, '(/)')
       END DO
 75006 FORMAT(2X, "&")      
       WRITE(MODULE_UNIT,95701)
 95701 FORMAT(/ '! define rate constants in terms of special rate operators ' /)
-      DO NXX = 1, NSPECIAL_RXN 
-         WRITE(MODULE_UNIT,95070)ISPECIAL( NXX,1 ),SPECIAL( ISPECIAL( NXX,2 ) ),
-     &   TRIM( LABEL( ISPECIAL( NXX,1 ),1 ) )
+      print*,size(label,1),size(label,2)
+      DO NXX = 1, NSPECIAL_RXN
+         IDX = ISPECIAL( NXX,1 )
+         IF( RTDAT( 1, IDX ) .NE. 1.0 )THEN
+              WRITE(MODULE_UNIT, 95068 )IDX,REAL(RTDAT( 1, IDX ), 8),
+     &        SPECIAL( ISPECIAL( NXX,2 ) ),TRIM( LABEL( IDX,1 ) )
+         ELSE
+!              WRITE(*,*)IDX,SPECIAL( ISPECIAL( NXX,2 ) ) !,LABEL( IDX,1 )
+              WRITE(MODULE_UNIT,95070)IDX,SPECIAL( ISPECIAL( NXX,2 ) ),
+     &        TRIM( LABEL( IDX,1 ) )
+         END IF
       END DO
-95070 FORMAT(11X,'RKI( NCELL,',I4,' ) = ',A16,' ! reaction: ',A)
       WRITE(MODULE_UNIT,95060)
       WRITE(MODULE_UNIT,4504)
 
 ! start writing the subroutine for rate constants 
 
-      WRITE(MODULE_UNIT,99880)
+!!!!   IF( HALOGEN_PARAMETER )THEN
+          WRITE(MODULE_UNIT,99870)
+!!!!   ELSE
+!!!!      WRITE(MODULE_UNIT,99880)
+!!!!   END IF
       
       IF( KUNITS .EQ. 2 )THEN
           WRITE(MODULE_UNIT,'(3A)')'! All rate constants converted from  molec/cm3 to ppm'
@@ -513,11 +545,27 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
                 END IF
              END IF
          END DO
+	 IF( HALOGEN_PARAMETER )THEN
+!	     WRITE(MODULE_UNIT,'(2/ 16X, A)')'IF( .NOT. PRESENT( LAND ) )CYCLE'
+	     WRITE(MODULE_UNIT,'(2/ 16X, A)')'IF( .NOT. LAND( NCELL ) )THEN'
+             DO NXX = 1, NR
+	        IF( KTYPE( NXX ) .NE. 12 )CYCLE
+	        WRITE(MODULE_UNIT, 5118, ADVANCE= 'NO') LABEL(NXX,1), NXX
+                DO IDX = 1, NFALLOFF
+                   IF( IRRFALL( IDX ) .EQ. NXX )EXIT
+                END DO
+                CALL WRITE_RATE_CONVERT_BEFORE(MODULE_UNIT, IORDER(NXX))
+                WRITE( MODULE_UNIT, 5120 )RTDAT(1, NXX ),RFDAT(1, IDX),RTDAT(2, NXX ),RFDAT(2, IDX) ! ,PHOTAB(HAL_PHOTAB(NXX))
+             END DO
+	     WRITE(MODULE_UNIT,'(16X, A)')'END IF'
+	 END IF
          WRITE(MODULE_UNIT,99881)
       END IF
 
 5117  FORMAT(/    '!  Reaction Label ', A / 16X, 'RKI( NCELL, ', I4, ') = ')
+5118  FORMAT(     '!  Reaction Label ', A / 19X, 'RKI( NCELL, ', I4, ') = ')
       WRITE(MODULE_UNIT,99882)
+      IF( ( KTN5 + KTN6 ) .GT. 0 )WRITE(MODULE_UNIT,99883)
       
 ! write loop for remaining rates
       
@@ -527,13 +575,14 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 !          WRITE(MODULE_UNIT, 1498 )TRIM(LABEL(NXX,1))
 !            CYCLE
 !         ELSE
-            WRITE(MODULE_UNIT, 1501, ADVANCE= 'NO')LABEL(NXX,1), NXX
+!            WRITE(MODULE_UNIT, 1501, ADVANCE= 'NO')LABEL(NXX,1), NXX
          END IF 
          
          SELECT CASE( KTYPE( NXX ) )
           CASE( -1 )
 !             IF( KUNITS .EQ. 2 )CALL WRITE_RATE_CONVERT_TIME(MODULE_UNIT, IORDER(NXX))
-             DO IPR = 1, NHETERO
+             WRITE(MODULE_UNIT, 1501, ADVANCE= 'NO')LABEL(NXX,1), NXX
+             DO IPR = 1, MHETERO
                 IF ( IHETERO( IPR,1 ) .EQ. NXX )EXIT
              END DO
              IDX = IHETERO( IPR, 2 )
@@ -562,34 +611,58 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 !                END IF
 !             END IF
           CASE( 1 )
+             WRITE(MODULE_UNIT, 1501, ADVANCE= 'NO')LABEL(NXX,1), NXX
              WRITE(MODULE_UNIT,5111, ADVANCE = 'NO')REAL(RTDAT(1, NXX), 8)
              CALL WRITE_RATE_CONVERT_AFTER(MODULE_UNIT, IORDER(NXX))
           CASE( 2 )
+             WRITE(MODULE_UNIT, 1501, ADVANCE= 'NO')LABEL(NXX,1), NXX
              IF( KUNITS .EQ. 2 )CALL WRITE_RATE_CONVERT_BEFORE(MODULE_UNIT, IORDER(NXX))
              WRITE(MODULE_UNIT,5129, ADVANCE = 'NO')RTDAT(1, NXX), RTDAT(2, NXX)
           CASE( 3 )
+             WRITE(MODULE_UNIT, 1501, ADVANCE= 'NO')LABEL(NXX,1), NXX
              IF( KUNITS .EQ. 2 )CALL WRITE_RATE_CONVERT_BEFORE(MODULE_UNIT, IORDER(NXX))
              WRITE(MODULE_UNIT,5103, ADVANCE = 'NO')RTDAT(1, NXX), RTDAT(3, NXX)
           CASE( 4 )
+             WRITE(MODULE_UNIT, 1501, ADVANCE= 'NO')LABEL(NXX,1), NXX
              IF( KUNITS .EQ. 2 )CALL WRITE_RATE_CONVERT_BEFORE(MODULE_UNIT, IORDER(NXX))
              WRITE(MODULE_UNIT,5104, ADVANCE = 'NO')RTDAT(1, NXX), RTDAT(3, NXX), RTDAT(2, NXX)
           CASE( 5 )
              IRX = INT( RTDAT( 3, NXX) )
-             WRITE(MODULE_UNIT,5005, ADVANCE = 'NO')IRX,RTDAT( 1, NXX ), RTDAT(2, NXX )
+             IF( IRX .GT. NXX )CYCLE
+             WRITE(MODULE_UNIT, 1501, ADVANCE= 'NO')LABEL(NXX,1), NXX
+             IDIFF_ORDER = IORDER(NXX) - IORDER(IRX)
+             IF( IDIFF_ORDER .NE. 0 )THEN
+                 FALLOFF_RATE = ( KTYPE(IRX) .GT. 7 .AND. KTYPE(IRX) .LT. 11 )
+                 IF( KUNITS .EQ. 2 .OR. FALLOFF_RATE )THEN
+                   CALL WRITE_RATE_CONVERT_BEFORE(MODULE_UNIT, IDIFF_ORDER )
+                 END IF
+             END IF
+             WRITE(MODULE_UNIT,5115, ADVANCE = 'NO')IRX, 1.0D0/RTDAT( 1, NXX ), -RTDAT(2, NXX )
           CASE( 6 )
              IRX = INT( RTDAT( 2, NXX) )
+             IF( IRX .GT. NXX )CYCLE
+             WRITE(MODULE_UNIT, 1501, ADVANCE= 'NO')LABEL(NXX,1), NXX
+             IDIFF_ORDER = IORDER(NXX) - IORDER(IRX)
+             IF( IDIFF_ORDER .NE. 0 )THEN
+                 FALLOFF_RATE = ( KTYPE(IRX) .GT. 7 .AND. KTYPE(IRX) .LT. 11 )
+                 IF( KUNITS .EQ. 2 .OR. FALLOFF_RATE )THEN
+                   CALL WRITE_RATE_CONVERT_BEFORE(MODULE_UNIT, IDIFF_ORDER )
+                 END IF
+             END IF
              IF( RTDAT( 1, NXX ) .NE. 1.0 )THEN
                  WRITE(MODULE_UNIT, 5006, ADVANCE = 'NO')REAL(RTDAT( 1, NXX ), 8), IRX
              ELSE
                  WRITE(MODULE_UNIT, 4706, ADVANCE = 'NO')' ', IRX
              END IF
           CASE( 7 )
+             WRITE(MODULE_UNIT, 1501, ADVANCE= 'NO')LABEL(NXX,1), NXX
              IF( RTDAT(2, NXX) .NE. 0.0 )THEN
                  WRITE(MODULE_UNIT,5114, ADVANCE = 'NO')REAL(RTDAT(1, NXX), 8),REAL(RTDAT(2, NXX), 8)
              ELSE
                  WRITE(MODULE_UNIT,5007, ADVANCE = 'NO')REAL(RTDAT(1, NXX), 8)
              END IF
           CASE( 8 )
+             WRITE(MODULE_UNIT, 1501, ADVANCE= 'NO')LABEL(NXX,1), NXX
              DO IDX = 1, NFALLOFF
                 IF( IRRFALL( IDX ) .EQ. NXX )EXIT
              END DO
@@ -597,6 +670,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
              WRITE(MODULE_UNIT,5108, ADVANCE = 'NO')RTDAT(1,NXX),(1.0*RTDAT(2,NXX)),RTDAT(3,NXX),
      &      (1.0*RFDAT(1,IDX)),RFDAT(2,IDX),(1.0*RFDAT(3,IDX))
           CASE( 9 )
+             WRITE(MODULE_UNIT, 1501, ADVANCE= 'NO')LABEL(NXX,1), NXX
              DO IDX = 1, NFALLOFF
                 IF( IRRFALL( IDX ) .EQ. NXX )EXIT
              END DO
@@ -609,6 +683,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &           RTDAT(3,NXX),RFDAT(3, IDX),1.0*RFDAT(1,IDX),RFDAT(4, IDX),RFDAT(5, IDX)
               END IF 
           CASE( 10 )
+             WRITE(MODULE_UNIT, 1501, ADVANCE= 'NO')LABEL(NXX,1), NXX
              DO IDX = 1, NFALLOFF
                 IF( IRRFALL( IDX ) .EQ. NXX )EXIT
              END DO
@@ -616,6 +691,21 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
              WRITE(MODULE_UNIT, 5110, ADVANCE = 'NO')RTDAT(1,NXX),RTDAT(3,NXX),RTDAT(2,NXX),
      &      RFDAT(1,IDX),RFDAT(3,IDX),RFDAT(2,IDX),RFDAT(5,IDX),RFDAT(4,IDX)
           CASE( 11 )
+	      DO IDX = 1, NSPECIAL_RXN
+	         IF( ISPECIAL( IDX, 1) .EQ. NXX )EXIT
+              END DO       
+             IF( ORDER_SPECIAL( ISPECIAL( IDX, 2 ) ) .EQ. 0 )THEN
+                  IDIFF_ORDER = IORDER(NXX) - 1
+             ELSE IF( ORDER_SPECIAL( ISPECIAL( IDX, 2 ) ) .GT. 0 )THEN
+                  IDIFF_ORDER = IORDER(NXX) - ORDER_SPECIAL( ISPECIAL( IDX, 2 ))
+             END IF
+             IF( IDIFF_ORDER .NE. 0 )THEN
+                IF( KUNITS .EQ. 2 )THEN
+                    WRITE(MODULE_UNIT,95069,ADVANCE = 'NO')ISPECIAL( IDX,1 )
+                    CALL WRITE_RATE_CONVERT_BEFORE(MODULE_UNIT, IDIFF_ORDER )
+                    WRITE(MODULE_UNIT,95071)ISPECIAL( IDX,1 )
+                END IF
+             END IF
              WRITE(MODULE_UNIT, 1498 )TRIM(LABEL(NXX,1))
 !             DO IDX = 1, NSPECIAL_RXN
 !                IF( ISPECIAL( IDX, 1 ) .EQ. NXX )EXIT
@@ -630,6 +720,39 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
           END SELECT
 !          WRITE( MODULE_UNIT,'(/)')
       END DO
+      DO NXX = 1, NR
+         IF( KTYPE( NXX ) .NE. 5 .OR. KTYPE( NXX ) .NE. 6 )CYCLE
+         SELECT CASE( KTYPE( NXX ) )
+          CASE( 5 )
+             IRX = INT( RTDAT( 3, NXX) )
+             IF( IRX .GT. NXX )CYCLE
+             WRITE(MODULE_UNIT, 1501, ADVANCE= 'NO')LABEL(NXX,1), NXX
+             IDIFF_ORDER = IORDER(NXX) - IORDER(IRX)
+             IF( IDIFF_ORDER .NE. 0 )THEN
+                 FALLOFF_RATE = ( KTYPE(IRX) .GT. 7 .AND. KTYPE(IRX) .LT. 11 )
+                 IF( KUNITS .EQ. 2 .OR. FALLOFF_RATE )THEN
+                   CALL WRITE_RATE_CONVERT_BEFORE(MODULE_UNIT, IDIFF_ORDER )
+                 END IF
+             END IF
+             WRITE(MODULE_UNIT,5115, ADVANCE = 'NO')IRX, 1.0D0/RTDAT( 1, NXX ), -RTDAT(2, NXX )
+          CASE( 6 )
+             IRX = INT( RTDAT( 2, NXX) )
+             IF( IRX .GT. NXX )CYCLE
+             IDIFF_ORDER = IORDER(NXX) - IORDER(IRX)
+             WRITE(MODULE_UNIT, 1501, ADVANCE= 'NO')LABEL(NXX,1), NXX
+             IF( IDIFF_ORDER .NE. 0 )THEN
+                 FALLOFF_RATE = ( KTYPE(IRX) .GT. 7 .AND. KTYPE(IRX) .LT. 11 )
+                 IF( KUNITS .EQ. 2 .OR. FALLOFF_RATE )THEN
+                   CALL WRITE_RATE_CONVERT_BEFORE(MODULE_UNIT, IDIFF_ORDER )
+                 END IF
+             END IF
+             IF( RTDAT( 1, NXX ) .NE. 1.0 )THEN
+                 WRITE(MODULE_UNIT, 5006, ADVANCE = 'NO')REAL(RTDAT( 1, NXX ), 8), IRX
+             ELSE
+                 WRITE(MODULE_UNIT, 4706, ADVANCE = 'NO')' ', IRX
+             END IF
+          END SELECT
+      END DO
 
       WRITE(MODULE_UNIT,99991)
       
@@ -640,14 +763,14 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       
       IF( .NOT. EXISTING )THEN
          WRITE(6,*)'ERROR: CANNOT LOCATE FILE: ' // TRIM(EQNAME)
-	 STOP
+         STOP
       END IF
 
       OPEN( UNIT = TEMPLATE_UNIT, FILE = TRIM( EQNAME ), STATUS = 'OLD', ERR = 40000)
       
       DO NC = 1, 1000
         READ (TEMPLATE_UNIT,'(A)',END=39999)FILE_LINE
-	WRITE( MODULE_UNIT,'(A)')TRIM( FILE_LINE )
+        WRITE( MODULE_UNIT,'(A)')TRIM( FILE_LINE )
       END DO
       
 39999 IF( NC .LT. 3)THEN
@@ -944,7 +1067,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &      / 9X,'FALLOFF_T10 = ( K0 / ( 1.0D0 + K0/K1 ) ) * CF ** KEND'
      &      / 9X,'RETURN'
      &      / 7X,'END FUNCTION FALLOFF_T10' 
-     &      / 7X,'REAL( 8 ) FUNCTION FALLOFF_T11(INV_TEMP,TEMPOT300,CAIR,A1,B1,C1,A2, B2, C2)'
+     &      / 7X,'REAL( 8 ) FUNCTION FALLOFF_T11(INV_TEMP,TEMPOT300,CAIR,A1,B1,C1,A2, B2, C2, D1, D2)'
      &      / '! rate constant for CMAQ fall off reaction type 11'
      &      / '! actually expanded form of type 9'
      &      / 9X,'IMPLICIT NONE'
@@ -958,15 +1081,33 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &      / 9X,'REAL( 8 ), INTENT( IN ) :: A2'
      &      / 9X,'REAL( 8 ), INTENT( IN ) :: B2'
      &      / 9X,'REAL( 8 ), INTENT( IN ) :: C2'
+     &      / 9X,'REAL( 8 ), INTENT( IN ) :: D1'
+     &      / 9X,'REAL( 8 ), INTENT( IN ) :: D2'
      &      /9X,'!  Local:'
      &      / 9X,'REAL( 8 ) K1'
      &      / 9X,'REAL( 8 ) K2'
+     &      / 9X,'REAL( 8 ) K3'
      &      / 9X,'INTRINSIC DEXP'
      &      / 9X,'K1 = A1 * DEXP( C1 * INV_TEMP ) * TEMPOT300**B1'
      &      / 9X,'K2 = A2 * DEXP( C2 * INV_TEMP ) * TEMPOT300**B2'
-     &      / 9X,'FALLOFF_T11 = K1 + K2 * CAIR'
+     &      / 9X,'K3 = D1 * DEXP( D2 * INV_TEMP )'
+     &      / 9X,'FALLOFF_T11 = K1 + K2 * CAIR + K3'
      &      / 9X,'RETURN'
-     &      / 7X,'END FUNCTION FALLOFF_T11'  /     )
+     &      / 7X,'END FUNCTION FALLOFF_T11' 
+     &      / 7X,'REAL( 8 ) FUNCTION HALOGEN_FALLOFF(PRESS,A1,B1,A2,B2)'
+     &      / 9X,'IMPLICIT NONE'
+     &      / 9X,'REAL( 8 ), PARAMETER    :: MAX_RATE = 2.4D-06  ! Maximum loss rate (1/sec)'
+     &      / 9X,'REAL( 8 ), INTENT( IN ) :: PRESS'
+     &      / 9X,'REAL( 8 ), INTENT( IN ) :: A1'
+     &      / 9X,'REAL( 8 ), INTENT( IN ) :: B1'
+     &      / 9X,'REAL( 8 ), INTENT( IN ) :: A2'
+     &      / 9X,'REAL( 8 ), INTENT( IN ) :: B2'
+     &      / 9X,'INTRINSIC DEXP'
+     &      / 9X,'HALOGEN_FALLOFF = A1 * DEXP( B1 * PRESS ) + A2 * DEXP( B2 * PRESS )'
+     &      / 9X,'HALOGEN_FALLOFF = DMIN1 (MAX_RATE, HALOGEN_FALLOFF )'
+     &      / 9X,'RETURN'
+     &      / 7X,'END FUNCTION HALOGEN_FALLOFF' 
+     &      /    )
     
     
 4501   FORMAT( '! Name of Mechanism ', A
@@ -1015,9 +1156,11 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 4557   FORMAT('DATA PHOTAB(', I3,' ) / ''',A16,''' /')
 4507  FORMAT('RKI_RXN_', A16,A4)        
 4706  FORMAT(A,1X,'RKI( NCELL, ', I4,' ) ')
-4708  FORMAT(A,1X,1PD12.4,' * RKI( NCELL, ', I4,' ) ')
+4726  FORMAT(A,1X)
+4708  FORMAT(A,1PD12.4,' * RKI( NCELL, ', I4,' ) ')
+4718  FORMAT(A,1PD12.4,' * ')
 4709  FORMAT( A )     
-4710  FORMAT(A,1X,1PD12.4,' * ', A)
+4710  FORMAT(A,1PD12.4,' * ', A)
 4711  FORMAT( / 5X, '&' 21X)
 4712  FORMAT(A, 1X, A)
 4713  FORMAT( '!If( .Not. CALC_RCONST )Then'
@@ -1043,8 +1186,8 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 5009   FORMAT('FALL_T09( ', 3(1PD12.4,', '), ' & ' / 5X, '&', 47X, 1PD12.4, ' )' )
 5010   FORMAT('FALL_T10( ', 3(1PD12.4,', '), ' & ' / 5X,'&', 47X, 3(1PD12.4,', '),  ' & '
      &        / 5X, '&', 47X, 1PD12.4,', ', 1PD12.4,' )')
-5019   FORMAT('FALL_T11( ', 3(1PD12.4,', ') / 5X,'&', 47X,  3(1PD12.4,', ')
-     &                   / 5X,'&', 47X,  1PD12.4,' )')
+5019   FORMAT('FALL_T11( ', 3(1PD12.4,', '), '&', / 5X,'&', 47X,  3(1PD12.4,', '), ' & ',
+     &                   / 5X,'&', 47X,  1PD12.4,', ', 1PD12.4,' )')
 
 !format statements for calling rate constant functions
 
@@ -1063,17 +1206,21 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 5110   FORMAT('FALLOFF_T10( INV_TEMP,  TEMPOT300,  CAIR,', ' & ' / 5X, '&', 47X, 3(1PD12.4,', '), ' & ' 
      &        / 5X,'&', 47X, 3(1PD12.4,', '),  ' & '
      &        / 5X, '&', 47X, 1PD12.4,', ', 1PD12.4,' )')
-5119   FORMAT('FALLOFF_T11( INV_TEMP,TEMPOT300,CAIR,', ' & ' / 5X, '&', 47X, 3(1PD12.4,', ') / 5X,'&',
-     &         47X,  3(1PD12.4,', ')
-     &        / 5X,'&', 47X,  1PD12.4,' )')
-
+5119   FORMAT('FALLOFF_T11( INV_TEMP,TEMPOT300,CAIR,', ' & ' / 5X, '&', 47X, 3(1PD12.4,', '), '&', / 5X,'&',
+     &         47X,  3(1PD12.4,', '),' & ',
+     &        / 5X,'&', 47X,  1PD12.4,', ', 1PD12.4,' )')
+5120   FORMAT('HALOGEN_FALLOFF( BLKPRES( NCELL ), ' 2(1PD12.4,', '), ' & ' / 5X, 
+     &        '&', 57X, (1PD12.4,', '), 6X, 1PD12.4, ' )')
 
 5005   FORMAT('RKI( NCELL, ' I4, ' ) / ARR2( ',1PD12.4,', ',1PD12.4,' )')            
+5115   FORMAT('RKI( NCELL, ' I4, ' )' , ' & ' 
+     &        / 5X, '&', 25X, '* (' 1PD12.4,' * DEXP(', 1PD12.4,' * INV_TEMP) ) ')
+5125   FORMAT('RKI( NCELL, ' I4, ' ) * ARRHENUIS_T03( INV_TEMP,',1PD12.4,', ',1PD12.4,' )')            
 5006   FORMAT(1PD12.4,' * RKI( NCELL, ' I4, ' ) ')   
 5007   FORMAT(1PD12.4,' *( 1.0D0 + 0.6D0 * PRESS )')             
 5011   FORMAT(1PD12.4,' * ',A)             
 5012   FORMAT(A)
-5027   FORMAT(1PD12.4,' * KHETERO( NCELL, IK_',A,' )')
+5027   FORMAT(1PD12.4,' * BLKHET( NCELL, IK_',A,' )')
 5028   FORMAT( 1X, 'KHETERO( NCELL, IK_',A, ' )' )
 5128   FORMAT( 1X, 'BLKHET(  NCELL, IK_',A, ' )' )
 5023   FORMAT(
@@ -1115,6 +1262,62 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &          / 7X,'END SUBROUTINE SPECIAL_RATES')
 95100  FORMAT(2X,A16,' = 0.0D0')        
 
+95068 FORMAT(11X,'RKI( NCELL,',I4,' ) = ',1PD10.4,' * ', A16,' ! reaction: ',A)
+95069 FORMAT(11X,'RKI( NCELL,',I4,' ) = ')
+95070 FORMAT(11X,'RKI( NCELL,',I4,' ) = ',A16,13X,' ! reaction: ',A)
+95071 FORMAT('RKI( NCELL,',I4,' ) ')
+
+
+99870 FORMAT(7X,'SUBROUTINE CALC_RCONST( BLKTEMP, BLKPRES, BLKH2O, RJBLK, BLKHET, LSUNLIGHT, LAND, RKI, NUMCELLS )' //
+     & '!**********************************************************************' //
+     & '!  Function: To compute thermal and photolytic reaction rate' /
+     & '!            coefficients for each reaction.' //
+     & '!  Preconditions: Photolysis rates for individual species must have' /
+     & '!                 been calculated and stored in RJPHOT. Expects' /
+     & '!                 temperature in deg K, pressure in atm., water' /
+     & '!                 vapor in ppmV, and J-values in /min.' /
+     & '!  Key Subroutines/Functions Called: POWER_02, ARRHRENUIS_T0*, FALLOFF_T*, HALOGEN_FALLOFF ' /
+     & '!***********************************************************************'///
+     &      //  7X,'USE RXNS_DATA'  //
+     & '        IMPLICIT NONE  ' //
+     & '!  Arguements: None ' //
+     & '        REAL( 8 ),           INTENT( IN  ) :: BLKTEMP( : )      ! temperature, deg K '/
+     & '        REAL( 8 ),           INTENT( IN  ) :: BLKPRES( : )      ! pressure, Atm'/
+     & '        REAL( 8 ),           INTENT( IN  ) :: BLKH2O ( : )      ! water mixing ratio, ppm '/
+     & '        REAL( 8 ),           INTENT( IN  ) :: RJBLK  ( :, : )   ! photolysis rates, 1/min '/ 
+     & '        REAL( 8 ),           INTENT( IN  ) :: BLKHET ( :, : )   ! heterogeneous rate constants, ???/min'/
+     & '        INTEGER,             INTENT( IN  ) :: NUMCELLS          ! Number of cells in block ' /
+     & '        LOGICAL,             INTENT( IN  ) :: LSUNLIGHT         ! Is there sunlight? ' /
+     & '        LOGICAL,             INTENT( IN  ) :: LAND( : )         ! Is the surface totally land? ' /
+     & '        REAL( 8 ),           INTENT( OUT ) :: RKI ( :, : )      ! reaction rate constant, ppm/min '/
+!     & '        LOGICAL,   OPTIONAL, INTENT( IN  ) :: LAND( : )         ! Is the surface totally land? ' /
+     & '!..Parameters: ' //
+     & '        REAL( 8 ), PARAMETER :: COEF1  = 7.33981D+15     ! Molec/cc to ppm conv factor ' /
+     & '        REAL( 8 ), PARAMETER :: CONSTC = 0.6D+0          ! Constant for reaction type 7' /
+     & '        REAL( 8 ), PARAMETER :: TI300  = 1.0D+0/300.0D+0 ! reciprocal of 300 deg K' /
+     & '        REAL( 8 ), PARAMETER :: SFACT  = 60.D+0          ! seconds per minute ' /
+     & '!..External Functions: None' //
+     & '!..Local Variables:' //
+     & '        INTEGER   :: NRT           ! Loop index for reaction types '/
+     & '        INTEGER   :: IRXN          ! Reaction number'/
+     & '        INTEGER   :: JNUM          ! J-value species # from PHOT)'/
+     & '        INTEGER   :: KNUM          ! Reaction # for a relative rate coeff.'/
+     & '        INTEGER   :: N             ! Loop index for reactions'/
+     & '        INTEGER   :: NCELL         ! Loop index for # of cells in the block' /
+     & '        REAL( 8 ) :: CAIR          ! air number density (wet) [molec/cm^3]' /
+     & '        REAL( 8 ) :: CFACT         ! Convertor cm^3/(molec*sec) to 1/(ppm*min)'/
+     & '        REAL( 8 ) :: CFACT_SQU     ! Convertor cm^6/(molec^2*sec) to 1/(ppm^2*min)'/
+     & '        REAL( 8 ) :: INV_CFACT     ! ppm/min to molec/(cm^3*sec)'/
+     & '        REAL( 8 ) :: TEMPOT300     ! temperature divided by 300 K, dimensionaless '/
+     & '        REAL( 8 ) :: INV_TEMP      ! reciprocal of air temperature, K-1' /
+     & '        REAL( 8 ) :: INV_CAIR      ! reciprocal of air number density (wet), [cm^3/molec]' /
+     & '        REAL( 8 ) :: TEMP          ! air temperature, K' /
+     & '        REAL( 8 ) :: PRESS         ! pressure [Atm] ' /
+     & '        REAL( 8 ) :: INV_RFACT     ! ppm/min to molec/(cm^3*min)' /
+     & '        REAL( 8 ) :: RFACT_SQU     ! cm^6/(molec^2*min) to 1/(ppm^2*min)' /
+     & '        REAL( 8 ) :: RFACT         ! cm^3/(molec*min) to 1/(ppm*min)' /
+     & '        REAL      :: H2O           ! Cell H2O mixing ratio (ppmV)'  //
+     & '        RKI = 0.0D0 ' / )
 
 99880 FORMAT(7X,'SUBROUTINE CALC_RCONST( BLKTEMP, BLKPRES, BLKH2O, RJBLK, BLKHET, LSUNLIGHT, RKI, NUMCELLS )' //
      & '!**********************************************************************' //
@@ -1130,7 +1333,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      & '        IMPLICIT NONE  ' //
      & '!  Arguements: None ' //
      & '        REAL( 8 ), INTENT( IN  ) :: BLKTEMP( : )      ! temperature, deg K '/
-     & '        REAL( 8 ), INTENT( IN  ) :: BLKPRES( : )      ! Reciprocal of temperature, Pa '/
+     & '        REAL( 8 ), INTENT( IN  ) :: BLKPRES( : )      ! pressure, Atm'/
      & '        REAL( 8 ), INTENT( IN  ) :: BLKH2O ( : )      ! water mixing ratio, ppm '/
      & '        REAL( 8 ), INTENT( IN  ) :: RJBLK  ( :, : )   ! photolysis rates, 1/min '/ 
      & '        REAL( 8 ), INTENT( IN  ) :: BLKHET ( :, : )   ! heterogeneous rate constants, ???/min'/
@@ -1156,13 +1359,14 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      & '        REAL( 8 ) :: INV_CFACT     ! ppm/min to molec/(cm^3*sec)'/
      & '        REAL( 8 ) :: TEMPOT300     ! temperature divided by 300 K, dimensionaless '/
      & '        REAL( 8 ) :: INV_TEMP      ! reciprocal of air temperature, K-1' /
+     & '        REAL( 8 ) :: INV_CAIR      ! reciprocal of air number density (wet), [cm^3/molec]' /
      & '        REAL( 8 ) :: TEMP          ! air temperature, K' /
      & '        REAL( 8 ) :: PRESS         ! pressure [Atm] ' /
      & '        REAL( 8 ) :: INV_RFACT     ! ppm/min to molec/(cm^3*min)' /
      & '        REAL( 8 ) :: RFACT_SQU     ! cm^6/(molec^2*min) to 1/(ppm^2*min)' /
      & '        REAL( 8 ) :: RFACT         ! cm^3/(molec*min) to 1/(ppm*min)' /
      & '        REAL      :: H2O           ! Cell H2O mixing ratio (ppmV)'  //
-     & '        RKI = 0.0 ' / )
+     & '        RKI = 0.0D0 ' / )
 99879   FORMAT(/'        IF( LSUNLIGHT )THEN ' /
      &          '            DO NCELL = 1, NUMCELLS ' )
 99881   FORMAT(/'            END DO ' /     
@@ -1174,10 +1378,13 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      & '             CAIR      = 1.0D+06 * COEF1 * BLKPRES( NCELL ) * INV_TEMP '/
      & '             CFACT     = 6.0D-05 * CAIR' / 
      & '             CFACT_SQU = 6.0D-11 * CAIR * CAIR '/
-     & '             INV_CFACT = 6.0D+07 / CAIR '/     
+     & '             INV_CAIR  = 1.0D0 / CAIR ' /
+     & '             INV_CFACT = 6.0D+07 * INV_CAIR '/     
      & '             TEMP      = BLKTEMP( NCELL ) '/
      & '             TEMPOT300 = BLKTEMP( NCELL ) * TI300 '  )
-
+99883  FORMAT(
+     & '             RFACT     = 1.0D+06 * INV_CAIR ' / 
+     & '             RFACT_SQU = 1.0D+12 * INV_CAIR * INV_CAIR ')
 99991  FORMAT(7X // 7X, ' END DO  ' 
      & / '!  Multiply rate constants by [M], [O2], [N2], [H2O], [H2], or [CH4]'
      & / '!  where needed and return'
@@ -1246,7 +1453,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      & '        IMPLICIT NONE  ' //
      & '!  Arguements: None ' //
      & '        REAL( 8 ), INTENT( IN  ) :: BLKTEMP( : )      ! temperature, deg K '/
-     & '        REAL( 8 ), INTENT( IN  ) :: BLKPRES( : )      ! Reciprocal of temperature, Pa '/
+     & '        REAL( 8 ), INTENT( IN  ) :: BLKPRES( : )      ! pressure, Atm '/
      & '        REAL( 8 ), INTENT( IN  ) :: BLKH2O ( : )      ! water mixing ratio, ppm '/
      & '        REAL( 8 ), INTENT( IN  ) :: RJBLK  ( :, : )   ! photolysis rates, 1/min '/ 
      & '        REAL( 8 ), INTENT( IN  ) :: BLKHET ( :, : )   ! heterogeneous rate constants, ???/min'/
@@ -1367,11 +1574,17 @@ C   begin body of subroutine  UPCASE
              WRITE(OUT_UNIT, 95002, ADVANCE = 'NO')
            CASE( 3 )
              WRITE(OUT_UNIT, 95003, ADVANCE = 'NO')
+           CASE( -2 )
+             WRITE(OUT_UNIT, 95005, ADVANCE = 'NO')
+           CASE( -1 )
+             WRITE(OUT_UNIT, 95004, ADVANCE = 'NO')
         END SELECT
 95000   FORMAT(' INV_CFACT * ')                
 95001   FORMAT(' SFACT * ')                
 95002   FORMAT(' CFACT * ')                
 95003   FORMAT(' CFACT_SQU * ')                
+95004   FORMAT(' RFACT * ')                
+95005   FORMAT(' RFACT_SQU * ')                
         RETURN
       END SUBROUTINE WRITE_RATE_CONVERT_BEFORE
       SUBROUTINE WRITE_RATE_CONVERT_AFTER(OUT_UNIT, RXN_ORDER)
@@ -1388,11 +1601,17 @@ C   begin body of subroutine  UPCASE
              WRITE(OUT_UNIT, 95002, ADVANCE = 'NO')
            CASE( 3 )
              WRITE(OUT_UNIT, 95003, ADVANCE = 'NO')
+           CASE( -2 )
+             WRITE(OUT_UNIT, 95005, ADVANCE = 'NO')
+           CASE( -1 )
+             WRITE(OUT_UNIT, 95004, ADVANCE = 'NO')
         END SELECT
 95000   FORMAT(' * INV_CFACT ')                
 95001   FORMAT(' * SFACT ')                
 95002   FORMAT(' * CFACT ')                
 95003   FORMAT(' * CFACT_SQU ')                
+95004   FORMAT(' * RFACT ')                
+95005   FORMAT(' * RFACT_SQU ')                
         RETURN
       END SUBROUTINE WRITE_RATE_CONVERT_AFTER
       SUBROUTINE WRITE_RATE_CONVERT_TIME(OUT_UNIT, RXN_ORDER)

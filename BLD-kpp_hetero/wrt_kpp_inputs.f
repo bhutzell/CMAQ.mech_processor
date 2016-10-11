@@ -40,10 +40,10 @@ C:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
       INTEGER,         INTENT( IN ) :: NR ! number of reactions
       INTEGER,         INTENT( IN ) :: IP ! number of photolysis reaction
-      CHARACTER( 16 ), INTENT( IN ) :: LABEL( MAXRXNUM,2 ) ! LABEL(NXX,1) 1st label found in rx NXX
+      CHARACTER( 16 ), INTENT( IN ) :: LABEL( :,: ) ! LABEL(NXX,1) 1st label found in rx NXX
                                                             ! LABEL(NXX,2) 2nd label found in rx NXX
       INTEGER,         INTENT( IN ) :: NS ! number of species
-      CHARACTER( 16 ), INTENT( IN ) :: SPCLIS( MAXSPEC )
+      CHARACTER( 16 ), INTENT( IN ) :: SPCLIS( : )
 
 c..local Variables for steady-state species
 
@@ -90,6 +90,8 @@ c..Variables for species to be dropped from mechanism
       REAL( 8 )           :: CONSTVAL                ! retrieved constant
       REAL( 8 )            :: CVAL( MAXCONSTS )       ! mechanism constants value
       INTEGER, PARAMETER  :: LUNOUT = 6
+      INTEGER             :: IDIFF_ORDER           ! difference between order of two separate reactions
+      LOGICAL             :: FALLOFF_RATE       ! whether a reaction is a falloff type
 
 
       CHARACTER(  12 ) :: EXFLNM_SPCS = 'SPCSDATX'
@@ -104,9 +106,6 @@ c..Variables for species to be dropped from mechanism
        SUBROUTINE GETRCTNT ( IMECH, INBUF, IEOL, LPOINT, CHR, WORD,
      &                      NXX, NS, SPCLIS, SPC1RX,
      &                      ICOL, LABEL, N_DROP_SPC, DROP_SPC )
-         USE KPP_DATA
-         USE MECHANISM_DATA
-         IMPLICIT NONE
          INTEGER,         INTENT(   IN  ) :: IMECH
          CHARACTER( 81 ), INTENT( INOUT ) :: INBUF
          INTEGER,         INTENT( INOUT ) :: LPOINT
@@ -115,18 +114,16 @@ c..Variables for species to be dropped from mechanism
          CHARACTER( 16 ), INTENT( INOUT ) :: WORD
          INTEGER,         INTENT(   IN  ) :: NXX
          INTEGER,         INTENT( INOUT ) :: NS
-         CHARACTER( 16 ), INTENT( INOUT ) :: SPCLIS( MAXSPEC )
-         INTEGER,         INTENT( INOUT ) :: SPC1RX( MAXSPEC )
+         CHARACTER( 16 ), INTENT( INOUT ) :: SPCLIS( : )
+         INTEGER,         INTENT( INOUT ) :: SPC1RX( : )
          INTEGER,         INTENT( INOUT ) :: ICOL
-         CHARACTER( 16 ), INTENT(   IN  ) :: LABEL( MAXRXNUM, 2 )
+         CHARACTER( 16 ), INTENT(   IN  ) :: LABEL( :, : )
          INTEGER,         INTENT(   IN  ) :: N_DROP_SPC
-         CHARACTER( 16 ), INTENT(   IN  ) :: DROP_SPC( MAXNLIST )
+         CHARACTER( 16 ), INTENT(   IN  ) :: DROP_SPC( : )
         END SUBROUTINE GETRCTNT
         SUBROUTINE GETPRDCT ( IMECH, INBUF, LPOINT, IEOL, CHR, WORD,
      &                      NXX, NS, SPCLIS, SPC1RX,
      &                      ICOL, N_DROP_SPC, DROP_SPC )
-          USE MECHANISM_DATA
-          IMPLICIT NONE
           INTEGER,         INTENT(   IN  ) :: IMECH
           CHARACTER( 81 ), INTENT( INOUT ) :: INBUF
           INTEGER,         INTENT( INOUT ) :: LPOINT
@@ -135,16 +132,14 @@ c..Variables for species to be dropped from mechanism
           CHARACTER( 16 ), INTENT( INOUT ) :: WORD
           INTEGER,         INTENT(   IN  ) :: NXX
           INTEGER,         INTENT( INOUT ) :: NS
-          CHARACTER( 16 ), INTENT( INOUT ) :: SPCLIS( MAXSPEC )
-          INTEGER,         INTENT( INOUT ) :: SPC1RX( MAXSPEC )
+          CHARACTER( 16 ), INTENT( INOUT ) :: SPCLIS( : )
+          INTEGER,         INTENT( INOUT ) :: SPC1RX( : )
           INTEGER,         INTENT( INOUT ) :: ICOL
           INTEGER,         INTENT(   IN  ) :: N_DROP_SPC
-          CHARACTER( 16 ), INTENT(   IN  ) :: DROP_SPC( MAXNLIST )
+          CHARACTER( 16 ), INTENT(   IN  ) :: DROP_SPC( : )
          END SUBROUTINE GETPRDCT
          SUBROUTINE GETRATE ( IMECH, INBUF, LPOINT, IEOL, CHR,
      &                         NXX, LABEL, IP )
-           USE MECHANISM_DATA
-           IMPLICIT NONE
            CHARACTER(  1 ), INTENT( INOUT ) :: CHR
            CHARACTER( 81 ), INTENT( INOUT ) :: INBUF
            INTEGER,         INTENT( IN )    :: IMECH
@@ -152,42 +147,34 @@ c..Variables for species to be dropped from mechanism
            INTEGER,         INTENT( INOUT ) :: IEOL
            INTEGER,         INTENT( INOUT ) :: IP
            INTEGER,         INTENT( IN )    :: NXX
-           CHARACTER( 16 ), INTENT( INOUT ) :: LABEL( MAXRXNUM,2 )
+           CHARACTER( 16 ), INTENT( INOUT ) :: LABEL( :,: )
         END SUBROUTINE GETRATE
         SUBROUTINE WREXTS (EQNAME_MECH, DESCRP_MECH, NS, SPCLIS, SPC1RX, NR,
      &                      IP,  NAMCONSTS, CVAL, SS1RX  ) 
-          USE MECHANISM_DATA
-          IMPLICIT NONE
           CHARACTER( 120 ), INTENT ( IN ) :: EQNAME_MECH
           CHARACTER(  32 ), INTENT ( IN ) :: DESCRP_MECH
           INTEGER,          INTENT ( IN ) :: NS                ! no. of species found in mechanism table
-          CHARACTER(  16 ), INTENT ( IN ) :: SPCLIS( MAXSPEC ) ! species list from mechanism table
+          CHARACTER(  16 ), INTENT ( IN ) :: SPCLIS( : ) ! species list from mechanism table
           INTEGER,          INTENT ( IN ) :: NR
-          INTEGER,          INTENT ( IN ) :: SPC1RX( MAXSPEC ) ! rx index of 1st occurence of species in mechanism table
+          INTEGER,          INTENT ( IN ) :: SPC1RX( : ) ! rx index of 1st occurence of species in mechanism table
           INTEGER,          INTENT ( IN ) :: IP
-          CHARACTER( 16 ),  INTENT ( IN ) :: NAMCONSTS( MAXCONSTS )
-          REAL( 8 ),        INTENT ( IN ) :: CVAL( MAXCONSTS )
-          INTEGER,          INTENT ( IN ) :: SS1RX( MAXNLIST )
+          CHARACTER( 16 ),  INTENT ( IN ) :: NAMCONSTS( : )
+          REAL( 8 ),        INTENT ( IN ) :: CVAL( : )
+          INTEGER,          INTENT ( IN ) :: SS1RX( : )
         END SUBROUTINE WREXTS
         SUBROUTINE GET_SS_DATA ( LUNOUT, NR ) 
-          USE MECHANISM_DATA
-          IMPLICIT NONE
           INTEGER, INTENT ( IN )         :: LUNOUT   ! Output unit number
           INTEGER, INTENT ( IN )         :: NR       ! No. of reactions
         END SUBROUTINE GET_SS_DATA
         SUBROUTINE CHECK_SS_SPC ( LUNOUT, NS, SPCLIS, NR, LABEL, SS1RX )
-         USE MECHANISM_DATA
-         IMPLICIT NONE
          INTEGER, INTENT ( IN )         :: LUNOUT               ! Output unit number
          INTEGER, INTENT ( IN )         ::  NS                  ! No. of species in mechanism
-         CHARACTER( 16 ), INTENT ( IN ) ::  SPCLIS( MAXSPEC )   ! List of mechanism species
+         CHARACTER( 16 ), INTENT ( IN ) ::  SPCLIS( : )   ! List of mechanism species
          INTEGER, INTENT ( IN )         ::  NR                  ! No. of reactions
-         CHARACTER( 16 ), INTENT ( IN ) ::  LABEL( MAXRXNUM,2 ) ! Reaction labels
-         INTEGER, INTENT ( INOUT )      ::  SS1RX( MAXNLIST )
+         CHARACTER( 16 ), INTENT ( IN ) ::  LABEL( :,: ) ! Reaction labels
+         INTEGER, INTENT ( INOUT )      ::  SS1RX( : )
        END SUBROUTINE CHECK_SS_SPC
        SUBROUTINE WRSS_EXT( NR ) 
-         USE MECHANISM_DATA
-         IMPLICIT NONE
          INTEGER, INTENT ( IN )         :: NR   ! No. of reactions
        END SUBROUTINE WRSS_EXT
       END INTERFACE 
@@ -588,14 +575,26 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 !                IF( KRX5( IDX ) .EQ. NXX )EXIT
 !             END DO         
              IRX = INT( RTDAT( 3, NXX) )
-!             IF( KUNITS .EQ. 2 )CALL WRITE_RATE_CONVERT(KPPEQN_UNIT, IORDER(NXX))
+	     IDIFF_ORDER = IORDER(NXX) - IORDER(IRX)
+	     IF( IDIFF_ORDER .NE. 0 )THEN
+	         FALLOFF_RATE = ( KTYPE(IRX) .GT. 7 .AND. KTYPE(IRX) .LT. 11 )
+                 IF( KUNITS .EQ. 2 .OR. FALLOFF_RATE )THEN
+	           CALL WRITE_RATE_CONVERT(KPPEQN_UNIT, IDIFF_ORDER )
+		 END IF
+	     END IF
              WRITE(KPPEQN_UNIT,5005, ADVANCE = 'NO')IRX,RTDAT( 1, NXX ), RTDAT(2, NXX )
           CASE( 6 )
 !             DO IDX = 1, KTN6
 !                IF( KRX6( IDX ) .EQ. NXX )EXIT
 !             END DO         
              IRX = INT( RTDAT( 2, NXX) )
-!            IF( KUNITS .EQ. 2 )CALL WRITE_RATE_CONVERT(KPPEQN_UNIT, IORDER(NXX))
+	     IDIFF_ORDER = IORDER(NXX) - IORDER(IRX)
+	     IF( IDIFF_ORDER .NE. 0 )THEN
+	         FALLOFF_RATE = ( KTYPE(IRX) .GT. 7 .AND. KTYPE(IRX) .LT. 11 )
+                 IF( KUNITS .EQ. 2 .OR. FALLOFF_RATE )THEN
+	           CALL WRITE_RATE_CONVERT(KPPEQN_UNIT, IDIFF_ORDER )
+		 END IF
+	     END IF
              IF( RTDAT( 1, NXX ) .NE. 1.0 )THEN
                  WRITE(KPPEQN_UNIT, 5006, ADVANCE = 'NO')REAL(RTDAT( 1, NXX ), 8), IRX
              ELSE
@@ -643,6 +642,13 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
              ELSE
                 WRITE(KPPEQN_UNIT,5012, ADVANCE = 'NO')TRIM( SPECIAL( IRX ) )
              END IF
+           CASE( 12 )
+             DO IDX = 1, NFALLOFF
+                IF( IRRFALL( IDX ) .EQ. NXX )EXIT
+             END DO
+             CALL WRITE_RATE_CONVERT(KPPEQN_UNIT, IORDER(NXX))
+             WRITE(KPPEQN_UNIT,5020, ADVANCE = 'NO')RTDAT(1, NXX ),RFDAT(1, IDX),RTDAT(2, NXX ),
+     &       RFDAT(2, IDX)
           END SELECT
          WRITE(KPPEQN_UNIT,'(A)')' ;'
       END DO
@@ -711,6 +717,20 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &      / '  KEND = 1.0_dp / KEND'
      &      / '  FALL_OFF = ( K0 / ( 1.0_dp + K0/K1 ) ) * CF ** KEND'
      &      / 'END FUNCTION FALL_OFF'
+     &      / 'REAL( kind=dp ) FUNCTION HALOGEN_FALLOFF(A1,B1,A2,B2)'
+     &      / '   IMPLICIT NONE'
+     &      / '   REAL( kind=dp ), INTENT( IN ) :: A1'
+     &      / '   REAL( kind=dp ), INTENT( IN ) :: B1'
+     &      / '   REAL( kind=dp ), INTENT( IN ) :: A2'
+     &      / '   REAL( kind=dp ), INTENT( IN ) :: B2'
+     &      / '   INTRINSIC DEXP'
+     &      / '   IF( OPEN_WATER )THEN'
+     &      / '       HALOGEN_FALLOFF = A1 * DEXP( B1 * PRESS ) + A2 * DEXP( B2 * PRESS )'
+     &      / '   ELSE'
+     &      / '       HALOGEN_FALLOFF = 0.0_dp'
+     &      / '   END IF'
+     &      / '   RETURN'
+     &      / 'END FUNCTION HALOGEN_FALLOFF' 
      &      / '#ENDINLINE' )
     
 4501   FORMAT( '! Name of Mechanism '
@@ -727,6 +747,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &        / 'INTEGER, PARAMETER  :: NPHOTAB  = ', I3,'     ! number of photolysis rates '
      &        / 'CHARACTER(16), SAVE :: PHOTAB( NPHOTAB )  ! Names of  photolysis '
      &        / 'REAL(dp)            :: RJCELL( NPHOTAB )  ! grid cell photolysis rates ,[min-1]'
+     &        / 'LOGICAL             :: OPEN_WATER         ! Is land category ice free open water?'
      &        / 'LOGICAL             :: CALC_RCONST        ! compute temp and dens dependent rate constants')
 4502   FORMAT(  '! pointers and names to specific photolysis rates' )
 4503   FORMAT(  'INTEGER, PARAMETER  :: IJ_',A16,' = ', I3 )
@@ -773,6 +794,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 5012   FORMAT(A)
 5014   FORMAT('ARRD( ',1PD12.4,', 0.0000D+0,', 1PD12.4,' )  * PRESS ')             
 5019   FORMAT('EP4D( ', 7(1PD12.4,', '), 1PD12.4,' )')
+5020   FORMAT('HALOGEN_FALLOFF( ', 3(1PD12.4,', '), 1PD12.4,' )')
 5027   FORMAT(1PD12.4,' * KHETERO( IK_',A,' )')
 5028   FORMAT(  'KHETERO( IK_',A, ' )' )
 5023   FORMAT(

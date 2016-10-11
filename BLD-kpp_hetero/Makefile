@@ -16,7 +16,7 @@
 ifndef COMPILER
   COMPILER = INTEL
 # COMPILER = PGF90
- COMPILER = GFORT
+#COMPILER = GFORT
 endif
 
 ifeq ($(COMPILER),INTEL)
@@ -28,13 +28,13 @@ CC = icc
 F_FLAGS = -fixed -132 -O3 -override-limits -check uninit -check bounds -check format -g -traceback -warn nounused -override-limits -fno-alias -mp1  -I . -g
 C_FLAGS =  -O2  -DFLDMN=1
 #  LINK_FLAGS = $(myLINK_FLAG)
-LINK_FLAGS = -i-static
+LINK_FLAGS = -Bstatic
 
 else
  FC = /usr/local/pgi/linux86-64/10.5/bin/pgf90
  CC    = /usr/local/pgi/linux86-64/10.5/bin/pgcc
-#FC = pgf90
-#CC = pgcc
+ FC = pgf90
+ CC = pgcc
 
 # compiler options for subroutines
  F_FLAGS = -Mfixed -Mextend -Mbounds  -Mchkfpstk -Mchkptr -Mchkstk -traceback -Ktrap=fp -O3 -I . -g
@@ -43,9 +43,8 @@ else
  LINK_FLAGS = -Bstatic  -Bstatic_pgi
 
  ifeq ($(COMPILER),GFORT)
-   CC    = /usr/bin/gcc
    FC    = gfortran
-#  CC    = gcc
+   CC    = gcc
    f_FLAGS       = -ffixed-form -ffixed-line-length-132 -O3 -funroll-loops -finit-character=32 -fcheck=all -I. 
    f_FLAGS       = -ffixed-form -ffixed-line-length-132 -O3 -funroll-loops -finit-character=32 -I. 
    F_FLAGS       = $(f_FLAGS)
@@ -54,8 +53,8 @@ else
    F90_FLAGS     = $(f90_FLAGS)
    C_FLAGS       = -O2 -DFLDMN -I /home/wdx/lib/x86_64/gcc/mpich/include
    LINKER        = $(FC)
+   LINK_FLAGS    = -static-libgfortran
  endif
-
 endif
  
 
@@ -67,6 +66,7 @@ OBJECTS =\
     chemmech.o \
     eatcom.o \
     check_ss_spc.o \
+    check_order_specials.o \
     getchar.o \
     getlabel.o \
     get_operator.o \
@@ -91,8 +91,6 @@ OBJECTS =\
     wrspecial_ext.o \
     wrss_ext.o  \
     wrt_kpp_inputs.o \
-    wrt_rate_calcks.o \
-    wrt_feval.o \
     wrt_reactions_module.o \
     wrbf6_fortran90.o \
     wrbf16c_fortran90.o \
@@ -101,9 +99,6 @@ OBJECTS =\
     wrspecial_ext_fortran90.o \
     wrexts_fortran90.o \
     wrss_ext_fortran90.o  \
-    wrt_jacob_blk.o \
-    wrt_jacob_blk_fortran90.o \
-    wrt_jacob.o \
     vallabchr.o \
     valwrdchr.o \
     nameval.o
@@ -123,4 +118,4 @@ $(MODEL): $(OBJECTS)
 	$(CC) $(C_FLAGS) -c $<
 
 clean:
-	\rm -f *.o
+	\rm -f *.o *.mod

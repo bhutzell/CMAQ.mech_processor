@@ -125,9 +125,6 @@ c..Variables for species to be dropped from mechanism
        SUBROUTINE GETRCTNT ( IMECH, INBUF, IEOL, LPOINT, CHR, WORD,
      &                      NXX, NS, SPCLIS, SPC1RX,
      &                      ICOL, LABEL, N_DROP_SPC, DROP_SPC )
-         USE KPP_DATA
-         USE MECHANISM_DATA
-         IMPLICIT NONE
          INTEGER,         INTENT(   IN  ) :: IMECH
          CHARACTER( 81 ), INTENT( INOUT ) :: INBUF
          INTEGER,         INTENT( INOUT ) :: LPOINT
@@ -136,18 +133,16 @@ c..Variables for species to be dropped from mechanism
          CHARACTER( 16 ), INTENT( INOUT ) :: WORD
          INTEGER,         INTENT(   IN  ) :: NXX
          INTEGER,         INTENT( INOUT ) :: NS
-         CHARACTER( 16 ), INTENT( INOUT ) :: SPCLIS( MAXSPEC )
-         INTEGER,         INTENT( INOUT ) :: SPC1RX( MAXSPEC )
+         CHARACTER( 16 ), INTENT( INOUT ) :: SPCLIS( : )
+         INTEGER,         INTENT( INOUT ) :: SPC1RX( : )
          INTEGER,         INTENT( INOUT ) :: ICOL
-         CHARACTER( 16 ), INTENT(   IN  ) :: LABEL( MAXRXNUM, 2 )
+         CHARACTER( 16 ), INTENT(   IN  ) :: LABEL( :, : )
          INTEGER,         INTENT(   IN  ) :: N_DROP_SPC
-         CHARACTER( 16 ), INTENT(   IN  ) :: DROP_SPC( MAXNLIST )
+         CHARACTER( 16 ), INTENT(   IN  ) :: DROP_SPC( : )
         END SUBROUTINE GETRCTNT
         SUBROUTINE GETPRDCT ( IMECH, INBUF, LPOINT, IEOL, CHR, WORD,
      &                      NXX, NS, SPCLIS, SPC1RX,
      &                      ICOL, N_DROP_SPC, DROP_SPC )
-          USE MECHANISM_DATA
-          IMPLICIT NONE
           INTEGER,         INTENT(   IN  ) :: IMECH
           CHARACTER( 81 ), INTENT( INOUT ) :: INBUF
           INTEGER,         INTENT( INOUT ) :: LPOINT
@@ -156,16 +151,14 @@ c..Variables for species to be dropped from mechanism
           CHARACTER( 16 ), INTENT( INOUT ) :: WORD
           INTEGER,         INTENT(   IN  ) :: NXX
           INTEGER,         INTENT( INOUT ) :: NS
-          CHARACTER( 16 ), INTENT( INOUT ) :: SPCLIS( MAXSPEC )
-          INTEGER,         INTENT( INOUT ) :: SPC1RX( MAXSPEC )
+          CHARACTER( 16 ), INTENT( INOUT ) :: SPCLIS( : )
+          INTEGER,         INTENT( INOUT ) :: SPC1RX( : )
           INTEGER,         INTENT( INOUT ) :: ICOL
           INTEGER,         INTENT(   IN  ) :: N_DROP_SPC
-          CHARACTER( 16 ), INTENT(   IN  ) :: DROP_SPC( MAXNLIST )
+          CHARACTER( 16 ), INTENT(   IN  ) :: DROP_SPC( : )
          END SUBROUTINE GETPRDCT
          SUBROUTINE GETRATE ( IMECH, INBUF, LPOINT, IEOL, CHR,
      &                         NXX, LABEL, IP )
-           USE MECHANISM_DATA
-           IMPLICIT NONE
            CHARACTER(  1 ), INTENT( INOUT ) :: CHR
            CHARACTER( 81 ), INTENT( INOUT ) :: INBUF
            INTEGER,         INTENT( IN )    :: IMECH
@@ -173,54 +166,67 @@ c..Variables for species to be dropped from mechanism
            INTEGER,         INTENT( INOUT ) :: IEOL
            INTEGER,         INTENT( INOUT ) :: IP
            INTEGER,         INTENT( IN )    :: NXX
-           CHARACTER( 16 ), INTENT( INOUT ) :: LABEL( MAXRXNUM,2 )
+           CHARACTER( 16 ), INTENT( INOUT ) :: LABEL( :,: )
         END SUBROUTINE GETRATE
-        SUBROUTINE WREXTS (EQNAME_MECH, DESCRP_MECH, NS, SPCLIS, SPC1RX, NR,
-     &                      IP,  NAMCONSTS, CVAL, SS1RX  ) 
-          USE MECHANISM_DATA
-          IMPLICIT NONE
+        SUBROUTINE WREXTS (EQNAME_MECH, DESCRP_MECH, NS, SPCLIS, SPC1RX, SS1RX ) 
           CHARACTER( 120 ), INTENT ( IN ) :: EQNAME_MECH
           CHARACTER(  32 ), INTENT ( IN ) :: DESCRP_MECH
           INTEGER,          INTENT ( IN ) :: NS                ! no. of species found in mechanism table
-          CHARACTER(  16 ), INTENT ( IN ) :: SPCLIS( MAXSPEC ) ! species list from mechanism table
-          INTEGER,          INTENT ( IN ) :: NR
-          INTEGER,          INTENT ( IN ) :: SPC1RX( MAXSPEC ) ! rx index of 1st occurence of species in mechanism table
-          INTEGER,          INTENT ( IN ) :: IP
-          CHARACTER( 16 ),  INTENT ( IN ) :: NAMCONSTS( MAXCONSTS )
-          REAL( 8 ),        INTENT ( IN ) :: CVAL( MAXCONSTS )
-          INTEGER,          INTENT ( IN ) :: SS1RX( MAXNLIST )
+          CHARACTER(  16 ), INTENT ( IN ) :: SPCLIS( : ) ! species list from mechanism table
+          INTEGER,          INTENT ( IN ) :: SPC1RX( : ) ! rx index of 1st occurence of species in mechanism table
+          INTEGER,          INTENT ( IN ) :: SS1RX( : )
         END SUBROUTINE WREXTS
         SUBROUTINE GET_SS_DATA ( LUNOUT, NR ) 
-          USE MECHANISM_DATA
-          IMPLICIT NONE
           INTEGER, INTENT ( IN )         :: LUNOUT   ! Output unit number
           INTEGER, INTENT ( IN )         :: NR       ! No. of reactions
         END SUBROUTINE GET_SS_DATA
         SUBROUTINE CHECK_SS_SPC ( LUNOUT, NS, SPCLIS, NR, LABEL, SS1RX )
-         USE MECHANISM_DATA
-         IMPLICIT NONE
          INTEGER, INTENT ( IN )         :: LUNOUT               ! Output unit number
          INTEGER, INTENT ( IN )         ::  NS                  ! No. of species in mechanism
-         CHARACTER( 16 ), INTENT ( IN ) ::  SPCLIS( MAXSPEC )   ! List of mechanism species
+         CHARACTER( 16 ), INTENT ( IN ) ::  SPCLIS( : )   ! List of mechanism species
          INTEGER, INTENT ( IN )         ::  NR                  ! No. of reactions
-         CHARACTER( 16 ), INTENT ( IN ) ::  LABEL( MAXRXNUM,2 ) ! Reaction labels
-         INTEGER, INTENT ( INOUT )      ::  SS1RX( MAXNLIST )
+         CHARACTER( 16 ), INTENT ( IN ) ::  LABEL( :,: ) ! Reaction labels
+         INTEGER, INTENT ( INOUT )      ::  SS1RX( : )
        END SUBROUTINE CHECK_SS_SPC
        SUBROUTINE WRSS_EXT( NR ) 
-         USE MECHANISM_DATA
-         IMPLICIT NONE
          INTEGER, INTENT ( IN )         :: NR   ! No. of reactions
        END SUBROUTINE WRSS_EXT
        SUBROUTINE WRT_KPP_INPUTS( NR, IP, LABEL, NS, SPCLIS  )
-         USE KPP_DATA
-         USE MECHANISM_DATA
-         IMPLICIT NONE
          INTEGER,         INTENT( IN ) :: NR ! number of reactions
          INTEGER,         INTENT( IN ) :: IP ! number of photolysis reaction
-         CHARACTER( 16 ), INTENT( IN ) :: LABEL( MAXRXNUM,2 ) ! LABEL(NXX,1) 1st label found in rx NXX
+         CHARACTER( 16 ), INTENT( IN ) :: LABEL( :,: ) ! LABEL(NXX,1) 1st label found in rx NXX
          INTEGER,         INTENT( IN ) :: NS ! number of species
-         CHARACTER( 16 ), INTENT( IN ) :: SPCLIS( MAXSPEC )
+         CHARACTER( 16 ), INTENT( IN ) :: SPCLIS( : )
        END SUBROUTINE WRT_KPP_INPUTS
+       SUBROUTINE WREXTS_FORTRAN90 ( WRUNIT,
+     &                              EQNAME_MECH,
+     &                              DESCRP_MECH,
+     &                              NS, SPCLIS, SPC1RX,
+     &                              NR,
+     &                              IP, 
+     &                              NAMCONSTS,
+     &                              CVAL, SS1RX,
+     &                              LITE ) 
+           INTEGER,           INTENT( IN ) ::  WRUNIT     ! logical write unit no.
+           CHARACTER( 120 ), INTENT ( IN ) :: EQNAME_MECH
+           CHARACTER(  32 ), INTENT ( IN ) :: DESCRP_MECH
+           INTEGER,          INTENT ( IN ) :: NS                ! no. of species found in mechanism table
+           CHARACTER(  16 ), INTENT ( IN ) :: SPCLIS( : ) ! species list from mechanism table
+           INTEGER,          INTENT ( IN ) :: NR                ! number of reaction
+           INTEGER,          INTENT ( IN ) :: SPC1RX( : ) ! rx index of 1st occurence of species in mechanism table
+           INTEGER,          INTENT ( IN ) :: IP                ! number of photolysis reactions
+           CHARACTER( 16 ),  INTENT ( IN ) :: NAMCONSTS( : )
+           REAL( 8 ),        INTENT ( IN ) :: CVAL( : )
+           INTEGER,          INTENT ( IN ) :: SS1RX( : )
+           LOGICAL,          INTENT ( IN ) :: LITE               ! option to omitted specific write statements
+       END SUBROUTINE WREXTS_FORTRAN90 
+       SUBROUTINE WRT_RATE_CONSTANT( NR, IP, NS, SPCLIS, LABEL  )
+           INTEGER,         INTENT( IN ) :: NR ! number of reactions
+           INTEGER,         INTENT( IN ) :: IP ! number of photolysis reaction
+           INTEGER,         INTENT( IN ) :: NS ! number of species
+           CHARACTER( 16 ), INTENT( IN ) :: SPCLIS( : )
+           CHARACTER( 16 ), INTENT( IN ) :: LABEL( :,: ) ! LABEL(NXX,1) 1st label found in rx NXX
+       END SUBROUTINE WRT_RATE_CONSTANT
       END INTERFACE 
   
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -275,7 +281,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 C Open mechanism input file and get the first non-comment line
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       IMECH = JUNIT()
-      PRINT*,'IMECH = ',IMECH 
       CALL NAMEVAL ( MECHNAME, EQNAME_MECH )
       OPEN ( UNIT = IMECH, FILE = EQNAME_MECH, STATUS = 'UNKNOWN' )
 !Open output file for conversion to KPP Equations Format
@@ -284,12 +289,12 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       CALL NAMEVAL ( SPCS_KPP_FILE, SPC_MECH_KPP )
       OPEN ( UNIT = KPPEQN_UNIT, FILE = EQN_MECH_KPP, STATUS = 'UNKNOWN' )
       EXUNIT_SPCS = JUNIT()
-      EXUNIT_RXDT = JUNIT()
-      EXUNIT_RXCM = JUNIT()
+!      EXUNIT_RXDT = JUNIT()
+!      EXUNIT_RXCM = JUNIT()
 c symbolic link locates "EXFLNM_..."; setenv requires INQUIRE (NAMEVAL):
       CALL NAMEVAL ( EXFLNM_SPCS, EQNAME_SPCS )
-      CALL NAMEVAL ( EXFLNM_RXDT, EQNAME_RXDT )
-      CALL NAMEVAL ( EXFLNM_RXCM, EQNAME_RXCM )
+!      CALL NAMEVAL ( EXFLNM_RXDT, EQNAME_RXDT )
+!      CALL NAMEVAL ( EXFLNM_RXCM, EQNAME_RXCM )
       CALL NAMEVAL ( RXNS_MODULE, FNAME_MODULE )
 
       CALL NAMEVAL ( RXNS_DATA_MODULE, FNAME_DATA_MODULE )
@@ -297,8 +302,8 @@ c symbolic link locates "EXFLNM_..."; setenv requires INQUIRE (NAMEVAL):
       CALL NAMEVAL ( OUT_DIR, OUTDIR )
 
       OPEN ( UNIT = EXUNIT_SPCS, FILE = EQNAME_SPCS, STATUS = 'UNKNOWN' )
-      OPEN ( UNIT = EXUNIT_RXDT, FILE = EQNAME_RXDT, STATUS = 'UNKNOWN' )
-      OPEN ( UNIT = EXUNIT_RXCM, FILE = EQNAME_RXCM, STATUS = 'UNKNOWN' )
+!      OPEN ( UNIT = EXUNIT_RXDT, FILE = EQNAME_RXDT, STATUS = 'UNKNOWN' )
+!      OPEN ( UNIT = EXUNIT_RXCM, FILE = EQNAME_RXCM, STATUS = 'UNKNOWN' )
 
       CALL RDLINE ( IMECH, INBUF, LPOINT, IEOL )
       CALL GETCHAR ( IMECH, INBUF, LPOINT, IEOL, CHR )
@@ -633,9 +638,24 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 C Resolve all reactions label references
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       WRITE( LUNOUT, * ) ' '
+!      IPR = 0 
       DO 501 IRX = 1, NR
          IF ( LABEL( IRX,2 ) .NE. '>>>>>>>>>>>>>>>>' ) THEN
 C search all rx's for LABEL(,1) match ...
+         IF ( TRIM( LABEL( IRX,2 ) ) .EQ. TRIM( LABEL( IRX,1 ) ) )THEN
+              WRITE( LUNOUT, 2024 ) IRX, LABEL(IRX,1)
+              STOP ' *** CHEMMECH ERROR ***'
+         END IF            
+!         IF ( KTYPE( IRX ) .EQ. 12 ) THEN
+!              NXX = INDEX1 ( LABEL(IRX,2), NPHOTAB, PHOTAB )
+!              IF( NXX .LE. 0 )THEN
+!                 WRITE( LUNOUT, 2023 ) IRX, LABEL(IRX,1),LABEL(IRX,2)
+!                 STOP ' *** CHEMMECH ERROR ***'
+!              END IF
+!              IPR = IPR + 1
+!              HAL_PHOTAB( IRX ) = NXX
+!	      CYCLE
+!          END IF
             DO NXX = 1, NR
                IF ( LABEL( NXX,1 ) .EQ. LABEL( IRX,2 ) ) THEN
 Could be a linear dependency photolysis reaction ...
@@ -677,7 +697,7 @@ Could a linear dependency reaction ...
                END IF  ! LABEL(NXX,1) .EQ. LABEL( IRX,2)
             END DO
 C if we get here, LABEL(,1) match not found
-            WRITE( LUNOUT, 2021 ) IRX
+            WRITE( LUNOUT, 2021 ) IRX, LABEL(IRX,1), LABEL( IRX,2)
             STOP ' *** CHEMMECH ERROR ***'
          END IF  ! LABEL .NE.  ...
 501   CONTINUE
@@ -716,7 +736,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
                     EXIT NR_LOOP
                 ENDIF
              ENDDO NR_LOOP
-             IF( INDEX_KTERM(IRX, IPR ) .EQ. 0)THEN
+             IF( INDEX_KTERM(IRX, IPR ) .LT. 0 )THEN
                WRITE( LUNOUT, 2031)SPECIAL( IRX ),KC_TERMS(IRX, IPR, 1)
                STOP ' *** CHEMMECH ERROR ***'
              ENDIF
@@ -729,7 +749,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
                  CYCLE
              ENDIF
 
-             IF( IORDER( ISPC ) .EQ. 2 )THEN
+             IF( IORDER( ISPC ) .EQ. 2 .OR. INDEX_KTERM(IRX, IPR ) .EQ. 0 )THEN
                  ISPC = INDEX1( KC_TERMS(IRX, IPR, 2), NS, SPCLIS)
                  IF( ISPC .GT. 0 )THEN
                     INDEX_CTERM(IRX, IPR ) = ISPC
@@ -744,7 +764,8 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
           ENDDO
        ENDDO 
 
- 
+       IF( NSPECIAL .GT. 0 )CALL CHECK_ORDER_SPECIAL()
+       
        DO IRX = 1, NSPECIAL_RXN
           ISPC = ISPECIAL( IRX, 1)
           DO IPR = 1, NREACT( ISPC )
@@ -799,55 +820,32 @@ C Set CGRID mechanism
 
         N_GAS_CHEM_SPC = 0 
         DO ISPC = 1, NUMB_MECH_SPCS
-           IF( SPECIES_TYPE( ISPC ) .NE. 'GC' )CYCLE
+           IF( SPECIES_TYPE( ISPC ) .EQ. 'AE' )CYCLE
            N_GAS_CHEM_SPC =  N_GAS_CHEM_SPC + 1
        END DO
 
       NRXNS = NR
       
-      CALL WREXTS ( EQNAME_MECH,
-     &              DESCRP_MECH,
-     &              NS, SPCLIS, SPC1RX,
-     &              NR,
-     &              IP,
-     &              NAMCONSTS,
-     &              CVAL, SS1RX ) 
+      CALL WREXTS ( EQNAME_MECH, DESCRP_MECH,
+     &              NS, SPCLIS, SPC1RX, SS1RX ) 
      
-      
 
-      CALL WRSPECIAL_EXT( )
+!      CALL WRSPECIAL_EXT( )
 
       IF( N_SS_SPC .GT. 0 ) CALL GET_SS_DATA( LUNOUT, NR ) 
 
 
-      CALL WRSS_EXT( NR ) 
+!      CALL WRSS_EXT( NR ) 
 
       CLOSE( KPPEQN_UNIT )
-
-      
-      
-!      CALL WRT_CALCKS( )
-
-!      print*,'calling WRT_RATE_CONSTANT '
       
       EQUATIONS_MECHFILE = EQNAME_MECH
       
-      CALL WRT_RATE_CONSTANT( NR, IP, LABEL, NS, SPCLIS  )
-
-!     print*,'calling WRT_FEVAL ' 
-
-!     CALL WRT_FEVAL(  )
-      
-!     print*,'called WRT_FEVAL ' 
-      
-!     CALL WRT_JACOB_BLK( )
-
-!      CALL WRT_JACOB( 1 )         
-!      CALL WRT_JACOB( 2 )         
+      CALL WRT_RATE_CONSTANT( NR, IP, NS, SPCLIS, LABEL  )
       
       CLOSE( EXUNIT_SPCS )
-      CLOSE( EXUNIT_RXDT )
-      CLOSE( EXUNIT_RXCM )
+!      CLOSE( EXUNIT_RXDT )
+!      CLOSE( EXUNIT_RXCM )
 
 
       CALL WRT_KPP_INPUTS( NR, IP, LABEL, NS, SPCLIS  )
@@ -880,8 +878,12 @@ C Set CGRID mechanism
      &        / 5X, 'Processing for reaction number:', I6 )
 2019  FORMAT( / 5X, '*** ERROR: Reaction label refers to undefined reaction type'
      &        / 5X, 'Processing for reaction number:', I6, 1X, A )
+2023  FORMAT( / 5X, '*** ERROR: KTYPE 12 reaction: Number, Label: ', I6, 1X, A,
+     &        / 5X, 'points to nonexistant photolysis rate: ', A )
 2021  FORMAT( / 5X, '*** ERROR: Label points to currently undefined reaction'
-     &        / 5X, 'Processing for reaction number:', I6 )
+     &        / 5X, 'Processing for reaction #:', I6,' Label: ', A16,' references label:', A16)
+2024  FORMAT( / 5X, '*** ERROR: Reaction label refers to reference itself for rate constant '
+     &        / 5X, 'Processing for reaction number:', I6, 1X, A )
 2031  FORMAT( / 5X, '*** ERROR: Special Rate Coefficient ', A16,
      &              ' uses the unlisted reaction label ', A16 )
 2032  FORMAT( / 5X, '*** ERROR: Special Rate Coefficient ', A16,
@@ -1076,10 +1078,16 @@ C   begin body of subroutine  UPCASE
              WRITE(OUT_UNIT, 95002, ADVANCE = 'NO')
            CASE( 3 )
              WRITE(OUT_UNIT, 95003, ADVANCE = 'NO')
+           CASE( -1 )
+             WRITE(OUT_UNIT, 95004, ADVANCE = 'NO')
+           CASE( -2 )
+             WRITE(OUT_UNIT, 95005, ADVANCE = 'NO')
         END SELECT
 95000   FORMAT(' INV_RFACTOR * ')                
 95001   FORMAT(' 60.0D0 * ')                
 95002   FORMAT(' RFACTOR * ')                
 95003   FORMAT(' RFACTOR_SQU * ')                
+95004   FORMAT(' ( 60.0D0 / RFACTOR ) * ')                
+95005   FORMAT(' ( 60.0D0 / RFACTOR_SQU ) * ')                
         RETURN
       END SUBROUTINE WRITE_RATE_CONVERT

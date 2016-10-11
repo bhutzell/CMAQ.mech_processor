@@ -22,7 +22,8 @@
      &           KTN7, KRX7  ( MAXRXNUM ),
 !    &           KCNV, KRXCNV( MAXRXNUM ),
      &           NFALLOFF, 
-     &           IRRFALL( MAXFALLOFF )
+     &           IRRFALL( MAXFALLOFF ),
+     &           HAL_PHOTAB( MAXRXNUM )
 
          INTEGER NWM,   NRXWM  ( MAX3BODIES )
          INTEGER NWW,   NRXWW  ( MAX3BODIES )
@@ -51,6 +52,8 @@
          INTEGER         :: N_OPERATORS( MAXSPECRXNS )
          INTEGER         :: OPERATORS( MAXSPECRXNS, MAXSPECTERMS )
          REAL( 8 )       :: OPERATOR_COEFFS( MAXSPECRXNS, MAXSPECTERMS)
+	 
+	 INTEGER, ALLOCATABLE :: ORDER_SPECIAL( : )
          
          INTEGER IPH( MAXPHOTRXNS,3 )
          INTEGER NPHOTAB                          ! no. of unique photolysis rates
@@ -114,7 +117,8 @@ c.. Variables for steady-state species
          REAL,               ALLOCATABLE ::  SPECIES_MOLWT( : )
          CHARACTER( 16),     ALLOCATABLE ::  CGRID_SPC    ( : )
          CHARACTER(LEN = 2), ALLOCATABLE ::  SPECIES_TYPE ( : )
-         
+
+         LOGICAL                      ::  HALOGEN_PARAMETER = .FALSE.          
          INTEGER                      ::  N_GAS_CHEM_SPC
          INTEGER                      ::  NUMB_MECH_SPCS
          INTEGER ,        ALLOCATABLE ::  MECHANISM_INDEX( : )
@@ -218,6 +222,8 @@ c..indices for decomposition
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 C Initialize mechanism array variables
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            CONST = 0.0D0
+
             DO 101 IRX = 1, MAXRXNUM
                DO ISPC = 1, MAXPRODS+3
                   IRR( IRX,ISPC ) = 0
@@ -226,7 +232,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
                   SC( IRX,ISPC ) = 0.0
                END DO
                DO ISPC = 1, 3
-                   RTDAT( ISPC,IRX ) = 0.0
+                   RTDAT( ISPC,IRX ) = 0.0D0
                END DO
                KTYPE( IRX ) = 0
                IORDER( IRX )  = 0
@@ -239,13 +245,13 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
                KRX6( IRX ) = 0
                KRX7( IRX ) = 0
 101         CONTINUE
-
-            NFALLOFF = 0
+            HAL_PHOTAB = 0
+            NFALLOFF   = 0
 
             DO 103 IRX = 1, MAXFALLOFF
                IRRFALL( IRX ) = 0   
                DO ISPC = 1, 5
-                  RFDAT( ISPC,IRX ) = 0.0
+                  RFDAT( ISPC,IRX ) = 0.0D0
                END DO
 103         CONTINUE
 
@@ -293,7 +299,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
                KC_COEFFS( ISPC,  1:MAXSPECTERMS) = 0.0
                KC_TERMS(  ISPC,  1:MAXSPECTERMS, 1) = ' '
                KC_TERMS(  ISPC,  1:MAXSPECTERMS, 2) = ' '
-               INDEX_KTERM(MAXSPECRXNS,  1:MAXSPECTERMS) = 0
+               INDEX_KTERM(MAXSPECRXNS,  1:MAXSPECTERMS) = -1
                INDEX_CTERM(MAXSPECRXNS,  1:MAXSPECTERMS) = 0
                N_OPERATORS( ISPC )  = 0
                OPERATORS(   ISPC, 1:MAXSPECTERMS)  = 0
