@@ -54,12 +54,11 @@ C==============================================================================
 
 101   CONTINUE
       READ( IMECH, '(A)', END = 999 ) INBUF
-
       IF ( INBUF( 1:1 ) .NE. '!' ) THEN
 C Find the last non blank character in the line and set IEOL
       LINE_COUNT = LINE_COUNT + 1
-      WRITE(6,'(A16,1X,I4,1X,A2)',ADVANCE='NO')'LINE:', LINE_COUNT,' '
-      WRITE(6,'(A)')INBUF
+!     WRITE(6,'(A16,1X,I4,1X,A2)',ADVANCE='NO')'LINE:', LINE_COUNT,' '
+!     WRITE(6,'(A)')INBUF
 
          IEOL = 0
          DO IPOS = 81, 1, -1
@@ -87,7 +86,7 @@ C eof encountered
 !001  FORMAT( / 5X, '*** RDLINE ERROR: End of file read on unit:', I3
 2001  FORMAT( / 5X, 'From RDLINE: End of file read on unit:', I3
      &        / 5X, 'Last line read:' / A81 )
-!     STOP
+      STOP
       IEOL = -999
       RETURN
       END
