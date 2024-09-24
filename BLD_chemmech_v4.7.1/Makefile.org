@@ -1,0 +1,66 @@
+
+  EXEC = CHEMMECHx2
+# EXDIR = $cwd
+# INCLS = $cwd
+
+# compiler options for subroutines
+# FF     = /share/linux/intel/fc/9.0/bin/ifort
+  FF     = /opt/intel/fc/9.1.031/bin/ifort
+  FSTD   = -fixed -extend_source -nowarn -i-static
+  OPTF   = -O2 -no-ftz -mp1 -auto
+  DBG    = -g -check bounds -fpe0 -ftrapuv -traceback
+# FFLAGS = $(FSTD) $(OPTF) -I. -I $(INCLS)
+# FFLAGS = $(FSTD) $(DBG)  -I. -I $(INCLS)
+  FFLAGS = $(FSTD) $(DBG)  -I.
+# CC     = cc
+# CC     = /share/linux/intel/C/cc/10.0/bin/icc
+  CC     = /opt/intel/cc/9.1.037/bin/icc
+  OPTC   = -O2 -no-ftz -mp1 -DFLDMN
+  CFLAGS = $(OPTC)
+# CFLAGS = -g
+
+# loader options
+  LOAD = $(FF)
+  LDFLAGS =
+
+#OFILES = $(FLIST:.f=.o) $(CLIST:.c=.o)
+#OFILES = $(FLIST:.f=.o) nameval.o
+ OBJS = \
+    chemmech.o \
+    eatcom.o \
+    getchar.o \
+    getlabel.o \
+    getprdct.o \
+    getrate.o \
+    getrctnt.o \
+    getreal.o \
+    getword.o \
+    junit.o \
+    index1.o \
+    lkupspec.o \
+    rdline.o \
+    size.o \
+    wrexts.o \
+    wrhdr1.o \
+    wrbf6.o \
+    wrbf16c.o \
+    wrbf12d.o \
+    wrbf12s.o \
+    vallabchr.o \
+    valwrdchr.o \
+    nameval.o
+        
+#OFILES = $(OBJS) nameval.o
+.SUFFIXES: .f .c
+
+.f.o:
+	$(FF)  $(FFLAGS) -c $<
+.c.o:
+	$(CC)  $(CFLAGS) -c $<
+
+$(EXEC): $(OBJS)
+	$(LOAD) $(LDFLAGS) $(OBJS) -o $@
+clear:
+	/bin/rm -f out $(EXEC)
+clean:
+	/bin/rm -f $(EXEC) $(OBJS)

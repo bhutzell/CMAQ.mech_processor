@@ -43,8 +43,6 @@ else
  LINK_FLAGS = -Bstatic  -Bstatic_pgi
 
  ifeq ($(COMPILER),GFORT)
-#  FC    = /usr/local/gcc-4.6/bin/gfortran
-#  CC    = /usr/bin/gcc
    FC    = gfortran
    CC    = gcc
    f_FLAGS       = -ffixed-form -ffixed-line-length-132 -O3 -funroll-loops -finit-character=32 -fcheck=all -I. 
@@ -57,7 +55,6 @@ else
    LINKER        = $(FC)
    LINK_FLAGS    = -static-libgfortran
  endif
-
 endif
  
 

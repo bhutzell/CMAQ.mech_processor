@@ -1,0 +1,99 @@
+C --------- Mechanism CTM Species intermediate INCLUDE File ----------
+C  /home/bhutzell/tools/chemmech_PRE_CMAQv5.2/output_CMAQv4.7.1
+C  /saprc99_ae4_aq/SPCS.ext
+C Generated from ...
+C  /home/bhutzell/tools/chemmech_PRE_CMAQv5.2/CMAQv4.7.1_mechanisms
+C  /saprc99_ae4_aq/mech.def
+C for Mechanism Name: SAPRC99_AE4_AQ                  
+
+C The following are reserved symbols declared in this INCLUDE file:
+C    NSPCS    = Number of mechanism species
+C    SPCNAMES = Table of mechanism species names
+C    SPC1RX   = rx index of 1st occurence of species in mechanism table
+
+      INTEGER, PARAMETER :: NSPCS =  79
+
+      CHARACTER( 16 ) :: SPCNAMES( NSPCS )
+      INTEGER         :: SPC1RX( NSPCS )
+
+      DATA SPCNAMES(  1), SPC1RX(  1)  / 'NO2             ',   1 /
+      DATA SPCNAMES(  2), SPC1RX(  2)  / 'NO              ',   1 /
+      DATA SPCNAMES(  3), SPC1RX(  3)  / 'O3P             ',   1 /
+      DATA SPCNAMES(  4), SPC1RX(  4)  / 'O3              ',   2 /
+      DATA SPCNAMES(  5), SPC1RX(  5)  / 'NO3             ',   6 /
+      DATA SPCNAMES(  6), SPC1RX(  6)  / 'N2O5            ',  11 /
+      DATA SPCNAMES(  7), SPC1RX(  7)  / 'HNO3            ',  13 /
+      DATA SPCNAMES(  8), SPC1RX(  8)  / 'O1D2            ',  18 /
+      DATA SPCNAMES(  9), SPC1RX(  9)  / 'HO              ',  19 /
+      DATA SPCNAMES( 10), SPC1RX( 10)  / 'HONO            ',  21 /
+      DATA SPCNAMES( 11), SPC1RX( 11)  / 'HO2             ',  23 /
+      DATA SPCNAMES( 12), SPC1RX( 12)  / 'CO              ',  29 /
+      DATA SPCNAMES( 13), SPC1RX( 13)  / 'HNO4            ',  32 /
+      DATA SPCNAMES( 14), SPC1RX( 14)  / 'HO2H            ',  37 /
+      DATA SPCNAMES( 15), SPC1RX( 15)  / 'SO2             ',  44 /
+      DATA SPCNAMES( 16), SPC1RX( 16)  / 'SULF            ',  44 /
+      DATA SPCNAMES( 17), SPC1RX( 17)  / 'SULAER          ',  44 /
+      DATA SPCNAMES( 18), SPC1RX( 18)  / 'C_O2            ',  46 /
+      DATA SPCNAMES( 19), SPC1RX( 19)  / 'HCHO            ',  46 /
+      DATA SPCNAMES( 20), SPC1RX( 20)  / 'COOH            ',  47 /
+      DATA SPCNAMES( 21), SPC1RX( 21)  / 'MEOH            ',  49 /
+      DATA SPCNAMES( 22), SPC1RX( 22)  / 'RO2_R           ',  51 /
+      DATA SPCNAMES( 23), SPC1RX( 23)  / 'ROOH            ',  52 /
+      DATA SPCNAMES( 24), SPC1RX( 24)  / 'R2O2            ',  56 /
+      DATA SPCNAMES( 25), SPC1RX( 25)  / 'RO2_N           ',  62 /
+      DATA SPCNAMES( 26), SPC1RX( 26)  / 'RNO3            ',  62 /
+      DATA SPCNAMES( 27), SPC1RX( 27)  / 'MEK             ',  64 /
+      DATA SPCNAMES( 28), SPC1RX( 28)  / 'PROD2           ',  64 /
+      DATA SPCNAMES( 29), SPC1RX( 29)  / 'CCO_O2          ',  69 /
+      DATA SPCNAMES( 30), SPC1RX( 30)  / 'PAN             ',  69 /
+      DATA SPCNAMES( 31), SPC1RX( 31)  / 'CCO_OOH         ',  72 /
+      DATA SPCNAMES( 32), SPC1RX( 32)  / 'CCO_OH          ',  72 /
+      DATA SPCNAMES( 33), SPC1RX( 33)  / 'RCO_O2          ',  79 /
+      DATA SPCNAMES( 34), SPC1RX( 34)  / 'PAN2            ',  79 /
+      DATA SPCNAMES( 35), SPC1RX( 35)  / 'CCHO            ',  81 /
+      DATA SPCNAMES( 36), SPC1RX( 36)  / 'RCO_OOH         ',  82 /
+      DATA SPCNAMES( 37), SPC1RX( 37)  / 'RCO_OH          ',  82 /
+      DATA SPCNAMES( 38), SPC1RX( 38)  / 'BZCO_O2         ',  90 /
+      DATA SPCNAMES( 39), SPC1RX( 39)  / 'PBZN            ',  90 /
+      DATA SPCNAMES( 40), SPC1RX( 40)  / 'BZ_O            ',  92 /
+      DATA SPCNAMES( 41), SPC1RX( 41)  / 'MA_RCO3         ', 102 /
+      DATA SPCNAMES( 42), SPC1RX( 42)  / 'MA_PAN          ', 102 /
+      DATA SPCNAMES( 43), SPC1RX( 43)  / 'TBU_O           ', 115 /
+      DATA SPCNAMES( 44), SPC1RX( 44)  / 'ACET            ', 116 /
+      DATA SPCNAMES( 45), SPC1RX( 45)  / 'NPHE            ', 117 /
+      DATA SPCNAMES( 46), SPC1RX( 46)  / 'PHEN            ', 118 /
+      DATA SPCNAMES( 47), SPC1RX( 47)  / 'BZNO2_O         ', 120 /
+      DATA SPCNAMES( 48), SPC1RX( 48)  / 'HOCOO           ', 126 /
+      DATA SPCNAMES( 49), SPC1RX( 49)  / 'HCOOH           ', 128 /
+      DATA SPCNAMES( 50), SPC1RX( 50)  / 'RCHO            ', 133 /
+      DATA SPCNAMES( 51), SPC1RX( 51)  / 'GLY             ', 145 /
+      DATA SPCNAMES( 52), SPC1RX( 52)  / 'MGLY            ', 149 /
+      DATA SPCNAMES( 53), SPC1RX( 53)  / 'BACL            ', 152 /
+      DATA SPCNAMES( 54), SPC1RX( 54)  / 'CRES            ', 155 /
+      DATA SPCNAMES( 55), SPC1RX( 55)  / 'CRESAER         ', 155 /
+      DATA SPCNAMES( 56), SPC1RX( 56)  / 'BALD            ', 158 /
+      DATA SPCNAMES( 57), SPC1RX( 57)  / 'METHACRO        ', 161 /
+      DATA SPCNAMES( 58), SPC1RX( 58)  / 'MVK             ', 166 /
+      DATA SPCNAMES( 59), SPC1RX( 59)  / 'ISOPROD         ', 170 /
+      DATA SPCNAMES( 60), SPC1RX( 60)  / 'DCB1            ', 178 /
+      DATA SPCNAMES( 61), SPC1RX( 61)  / 'DCB2            ', 180 /
+      DATA SPCNAMES( 62), SPC1RX( 62)  / 'DCB3            ', 182 /
+      DATA SPCNAMES( 63), SPC1RX( 63)  / 'ETHENE          ', 185 /
+      DATA SPCNAMES( 64), SPC1RX( 64)  / 'ISOPRENE        ', 189 /
+      DATA SPCNAMES( 65), SPC1RX( 65)  / 'TRP1            ', 193 /
+      DATA SPCNAMES( 66), SPC1RX( 66)  / 'TRP1AER         ', 193 /
+      DATA SPCNAMES( 67), SPC1RX( 67)  / 'ALK1            ', 197 /
+      DATA SPCNAMES( 68), SPC1RX( 68)  / 'ALK2            ', 198 /
+      DATA SPCNAMES( 69), SPC1RX( 69)  / 'ALK3            ', 199 /
+      DATA SPCNAMES( 70), SPC1RX( 70)  / 'ALK4            ', 200 /
+      DATA SPCNAMES( 71), SPC1RX( 71)  / 'ALK5            ', 201 /
+      DATA SPCNAMES( 72), SPC1RX( 72)  / 'ALK5AER         ', 201 /
+      DATA SPCNAMES( 73), SPC1RX( 73)  / 'ARO1            ', 202 /
+      DATA SPCNAMES( 74), SPC1RX( 74)  / 'ARO1AER         ', 202 /
+      DATA SPCNAMES( 75), SPC1RX( 75)  / 'ARO2            ', 203 /
+      DATA SPCNAMES( 76), SPC1RX( 76)  / 'ARO2AER         ', 203 /
+      DATA SPCNAMES( 77), SPC1RX( 77)  / 'OLE1            ', 204 /
+      DATA SPCNAMES( 78), SPC1RX( 78)  / 'OLE2            ', 208 /
+      DATA SPCNAMES( 79), SPC1RX( 79)  / 'OLE2AER         ', 208 /
+
+C End of Mechanism CTM Species intermediate INCLUDE File ------------

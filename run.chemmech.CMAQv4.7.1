@@ -1,0 +1,95 @@
+#! /bin/csh -f
+
+
+ date
+ set echo
+
+set BASE  = $cwd
+
+
+#set Xpath = ${BASE}/BLD-ggb_special_SS4
+#set EXEC  = CHEMMECH_ggb_SS4
+ set Xpath = ${BASE}/BLD_chemmech_v4.7.1
+ set EXEC  = CHEMMECH
+
+#option use CMAQ species namelists to determine CGRID species indices
+ setenv USE_SPCS_NAMELISTS F
+
+# mechanism input file ........................................................
+
+ set MECH_ARCHIVE = ${BASE}/CMAQv4.7.1_mechanisms
+
+ set mechanisms = ( cb05cl_ae4_aq  cb05cl_ae5_aq  cb05cl_ae5ca_aq  cb05cl_ae5st_aq  cb05cltx_ae5_aq  cb05txhg_ae5_aq  saprc99_ae4_aq  saprc99_ae5_aq  saprc99_ae5ca_aq  saprc99_ae5st_aq  saprc99tx3_ae5_aq )
+#set mechanisms = ( cb05cl_ae5_aq )
+ 
+
+foreach Mechanism ( $mechanisms )
+ set echo
+
+ set Mpath = ${MECH_ARCHIVE}"/"${Mechanism}
+ set MCFL =  ${Mpath}"/mech.def"
+
+ if( !( -e $MCFL ) )then
+   \ls $$MCFL
+    exit()
+ endif
+ setenv MECHDEF  $MCFL
+
+#setenv MAPPING_ROUTINE "map_chemistry_spc.F90"
+ 
+
+#set NML    = ${Mpath}
+#set NML_TR = ${BASE}/input/trac0
+#set NML_TR = ${MECH_ARCHIVE}/trac0
+
+#set GC_NML = $NML/GC_${Mechanism}.nml
+#set AE_NML = $NML/AE_${Mechanism}.nml
+#set NR_NML = $NML/NR_${Mechanism}.nml
+#set AE_NML = $NML/AE_saprc07tc_ae6_aq.nml
+#set NR_NML = $NML/NR_saprc07tc_ae6_aq.nml
+#set GC_NML = $NML/GC_saprc11tc_ae6_aq.nml
+
+#set TR_NML = $NML_TR/Species_Table_TR_0.nml
+
+
+#setenv gc_matrix_nml $GC_NML
+#setenv ae_matrix_nml $AE_NML
+#setenv nr_matrix_nml $NR_NML
+#setenv tr_matrix_nml $TR_NML
+
+
+  set Opath = ${BASE}"/output_CMAQv4.7.1/"${Mechanism}
+  if( ! ( -d $Opath ) ) mkdir -p $Opath
+
+# output files ................................................................
+
+ if( $Opath != ${Mpath} )\cp -f $MECHDEF $Opath/.
+
+ setenv SPCSDATX    $Opath/SPCS.ext #<- temporary file, read by Species Processor
+ setenv RXNSDATX    $Opath/RXDT.EXT
+ setenv RXNSCOMX    $Opath/RXCM.EXT
+
+ #setenv RXNS_DATA_MODULE $Opath/RXNS_DATA_MODULE.F90
+ #setenv RXNS_FUNC_MODULE $Opath/RXNS_FUNC_MODULE.F90
+ #setenv OUTDIR           $Opath
+
+ #set KPP_Out_Path = ${Opath}
+ #if( ! ( -d ${KPP_Out_Path} ) )mkdir -p ${KPP_Out_Path}
+
+ #set KPP_EQN =  mech_${Mechanism}.eqn
+ #set KPP_SPC =  mech_${Mechanism}.spc
+
+ #setenv EQNS_KPP_FILE ${KPP_Out_Path}/${KPP_EQN}
+ #setenv SPCS_KPP_FILE ${KPP_Out_Path}/${KPP_SPC}
+
+ unset echo
+
+ ls -l $Xpath/$EXEC
+
+ $Xpath/$EXEC
+
+end
+
+ exit()
+
+

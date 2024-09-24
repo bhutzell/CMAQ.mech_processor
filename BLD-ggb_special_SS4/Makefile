@@ -4,24 +4,27 @@
   MODEL = CHEMMECH_ggb_SS4
 
 
-#  FC = $(myFC) 
-#  CC = $(myCC)
-#  F_FLAGS = $(myFFLAGS) -I . -g
-#  C_FLAGS = $(myCFLAGS) -DFLDMN=1
-
-FC = /usr/local/intel/ictce/3.2.2.013/fc/bin/intel64/ifort
-CC = /usr/local/intel/ictce/3.2.2.013/cc/bin/intel64/icc
-F_FLAGS = -fixed -132 -O3 -override-limits -fno-alias -mp1  -I . -g
-C_FLAGS =  -O2  -DFLDMN=1
+FC = ifort
+CC = icc
+#F_FLAGS = -fixed -132 -O3 -fno-alias -mp1  -I . -g
 #  LINK_FLAGS = $(myLINK_FLAG)
-LINK_FLAGS = -i-static
+#C_FLAGS =  -O2  -DFLDMN=1
+ f_FLAGS   = -fixed -132 -O0 -fpe0 -check uninit -check bounds -check format -g -traceback -fno-alias -mp1  -I .
+ F_FLAGS   = $(f_FLAGS)
+ f90_FLAGS = -free -132 -O0 -fpe0 -check uninit -check bounds -check format -g -traceback -fno-alias -mp1  -I .
+ F90_FLAGS = $(f90_FLAGS)
+ C_FLAGS   =  -O2  -DFLDMN=1
 
-FC = /usr/local/pgi/linux86-64/10.5/bin/pgf90
-CC    = /usr/local/pgi/linux86-64/10.5/bin/pgcc
+#LINK_FLAGS = -i-static
+ LINK_FLAGS =
 
-F_FLAGS = -Mfixed -Mextend -O3 -I . -g -C
-C_FLAGS =  -O2  -DFLDMN=1
-LINK_FLAGS = -Bstatic  -Bstatic_pgi
+
+#FC = pgf90
+#CC = pgcc
+
+#F_FLAGS = -Mfixed -Mextend -O3 -I . -g -C
+#C_FLAGS =  -O2  -DFLDMN=1
+#LINK_FLAGS = -Bstatic  -Bstatic_pgi
 
 # compiler options for subroutines
 
