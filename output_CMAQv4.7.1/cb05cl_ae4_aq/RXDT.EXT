@@ -1,8 +1,8 @@
 C --------- Mechanism Reactions, Rates, etc. DATA INCLUDE File ---------
-C  /home/bhutzell/tools/chemmech_PRE_CMAQv5.2/output_CMAQv4.7.1
+C  /home/bhutzell/tools/CMAQ_chemmech-github/output_CMAQv4.7.1
 C  /cb05cl_ae4_aq/RXDT.EXT
 C Generated from ...
-C  /home/bhutzell/tools/chemmech_PRE_CMAQv5.2/CMAQv4.7.1_mechanisms
+C  /home/bhutzell/tools/CMAQ_chemmech-github/CMAQv4.7.1_mechanisms
 C  /cb05cl_ae4_aq/mech.def
 C for Mechanism Name: CB05CL_AE4_AQ                   
 
