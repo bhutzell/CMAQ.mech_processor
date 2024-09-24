@@ -1,4 +1,3 @@
-Test
 # CMAQ.mech_processor
 FORTRAN code for a utility, CHEMMECH, that creates RXNS Fortran90 modules for the CMAQ model version 5.1 as well as older code of the utility that creates RXDT.EXT and RXCM.EXT as in CMAQ version 4.7.1. 
 
